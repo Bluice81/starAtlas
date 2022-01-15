@@ -113,7 +113,7 @@ function processShip() {
         });
 
         if (shipInfo.length == 1) {
-            elements[x].insertBefore(createElementFromHTML(`<span id='x01' class="poster__PosterSmallSubtitle-iUsOwG pmvPN">vwap: ${formatterUSD.format(shipInfo[0].price)}<br>earn: ${formatterNr.format(shipInfo[0].rgl)} &#916;/day<br>cost: ${formatterNr.format(shipInfo[0].cg)} &#916;/day</span>`, "x01"), null);
+            elements[x].insertBefore(createElementFromHTML(`<span id='x01' style="font-family: Graphik; font-style: normal; font-weight: normal; font-size: 12px; line-height: 16px; text-align: center; text-transform: uppercase; color: rgb(146, 146, 150);">vwap: ${formatterUSD.format(shipInfo[0].price)}<br>earn: ${formatterNr.format(shipInfo[0].rgl)} &#916;/day<br>cost: ${formatterNr.format(shipInfo[0].cg)} &#916;/day</span>`, "x01"), null);
         }
     }
 }
