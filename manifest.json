@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "StarAtlas Tools",
+  "version": "1.8",
+  "description": "An unofficial extension of the \"Star Atlas\" game that enhances the gaming experience",
+  "icons": {
+    "48": "icons/logo.jpg"
+  },
+  "permissions": [
+    "https://lnk.totemzetasoft.it/starAtlas/api/services.php"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://play.staratlas.com/*"
+      ],
+      "js": [
+        "js/engine.js"
+      ]
+    }
+  ]
+}
