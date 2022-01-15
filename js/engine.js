@@ -113,15 +113,9 @@ function processShip() {
         });
 
         if (shipInfo.length == 1) {
-            processElement(elements[x], shipInfo[0]);
+            elements[x].insertBefore(createElementFromHTML(`<span id='x01' class="poster__PosterSmallSubtitle-iUsOwG pmvPN">vwap: ${formatterUSD.format(shipInfo[0].price)}<br>earn: ${formatterNr.format(shipInfo[0].rgl)} &#916;/day<br>cost: ${formatterNr.format(shipInfo[0].cg)} &#916;/day</span>`, "x01"), null);
         }
     }
-
-    // elements = document.getElementsByClassName('eRxHev');
-    // for (var x = 0; x < elements.length; x++) {
-    //     elements[x].style.height = 'auto';
-    //     elements[x].style.padding = '10px';
-    // }
 }
 function checkResourceConsuming() {
     var templateTimer = `
@@ -221,22 +215,6 @@ function monthlyRewards() {
         }
     }
 }
-function processElement(shipNameElement, shipInfo) {
-    shipNameElement.insertBefore(createElementFromHTML(`<span id='x01' class="poster__PosterSmallSubtitle-iUsOwG pmvPN">vwap: ${formatterUSD.format(shipInfo.price)}<br>earn: ${formatterNr.format(shipInfo.rgl)} &#916;/day<br>cost: ${formatterNr.format(shipInfo.cg)} &#916;/day</span>`, "x01"), null);
-    return;
-
-    var elements = shipNameElement.closest("button").getElementsByTagName('h3');
-
-    for (var x = 0; x < elements.length; x++) {
-        if (elements[x].innerText.toLocaleLowerCase() == 'trade') {
-
-            elements[x].insertBefore(createElementFromHTML(`<span id='x01' class="poster__PosterSmallSubtitle-iUsOwG pmvPN">vwap: ${formatterUSD.format(shipInfo.price)}<br>earn: ${formatterNr.format(shipInfo.rgl)} &#916;/day<br>cost: ${formatterNr.format(shipInfo.cg)} &#916;/day</span>`, "x01"), null);
-
-            break;
-        };
-    }
-}
-
 function createElementFromHTML(htmlString, id) {
     var parsedHtml = parser.parseFromString(htmlString, 'text/html');
     return parsedHtml.getElementById(id);
