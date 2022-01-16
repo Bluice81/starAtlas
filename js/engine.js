@@ -11,7 +11,8 @@ let extSetting = {
     ext005: "YES",
     ext006: "YES",
     ext007: "YES",
-    ext008: "YES"
+    ext008: "YES",
+    ext009: "YES"
 }
 
 function myLog(text) {
@@ -23,6 +24,9 @@ myLog('load extension');
 //load extSetting from localstorage if exists
 if (localStorage.extSetting) {
     extSetting = JSON.parse(localStorage.extSetting);
+    if (!extSetting.ext009) {
+        extSetting.ext009 = "YES";
+    }
 }
 
 var formatterUSD = new Intl.NumberFormat('en-US', {
@@ -57,7 +61,7 @@ function checkMenu() {
         if (!document.getElementById('wndAtlasTool')) {
             var templateExtWindow = `
             <div id='wndAtlasTool' style='display: none; align-items: center; justify-content: center; top: 0; z-index: 1; position:absolute; width: 100%; height: 100%;'>
-                <div style='padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 450px; background: #1e1d25'>
+                <div style='padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
                     <div style='display:flex; height: 45px; font-family: industryMedium; '>
                         <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
                             Show origination price
@@ -122,6 +126,14 @@ function checkMenu() {
                             ${extSetting.ext008}
                         </div>                        
                     </div>  
+                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                            Fix website layout error 
+                        </div>
+                        <div id="ext009" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext009 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                            ${extSetting.ext009}
+                        </div>                        
+                    </div>                      
                     <div id='wndAtlasTool_close' style='margin-top: 20px; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
                         CLOSE                
                     </div>                                                                                                                                                     
@@ -141,7 +153,7 @@ function checkMenu() {
         }
     }
 
-    if (location.href.includes('/market/')) {
+    if (location.href.includes('/market/') && extSetting.ext009 == "YES") {
         //Fix open order visibility
         myLog('current menu: market item');
 
@@ -229,6 +241,13 @@ function checkMenu() {
                 el.outerHTML = '';
                 el = document.getElementById('resourceTimer');
             }
+        }
+    }
+    if (location.href.includes('/profile/') && extSetting.ext009 == "YES") {
+        var el = document.querySelector(`div[class^="styles__HeaderTabsContainer-"]`);
+        if (el) {
+            el.nextElementSibling.style.minHeight = "";
+            el.nextElementSibling.style.overflowY = "auto";
         }
     }
 }
