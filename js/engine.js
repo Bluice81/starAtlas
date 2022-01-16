@@ -1,14 +1,29 @@
 let parser = new DOMParser();
 let fleetInStaking = [];
 let dateTimeout = new Date();
-let shipData;
+let animateStar = false;
+let getMarketDataApiRunning = false;
+let extSetting = {
+    ext001: "YES",
+    ext002: "YES",
+    ext003: "YES",
+    ext004: "YES",
+    ext005: "YES",
+    ext006: "YES",
+    ext007: "YES",
+    ext008: "YES"
+}
 
 function myLog(text) {
     console.log('SA_EXT: ' + text);
 }
 
 myLog('load extension');
-getMarketDataApi(0);
+
+//load extSetting from localstorage if exists
+if (localStorage.extSetting) {
+    extSetting = JSON.parse(localStorage.extSetting);
+}
 
 var formatterUSD = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -23,6 +38,109 @@ var formatterNr = new Intl.NumberFormat('en-US', {
 setInterval(checkMenu, 500);
 
 function checkMenu() {
+    //create extension menu if not exists
+    if (!document.getElementById('mnuAtlasTool')) {
+        myLog('create extension menu');
+        var navMenu = document.querySelectorAll(`div[class^="NavItemstyles__"]`);
+
+        var template = `
+            <div id='mnuAtlasTool' style="background-size: contain; cursor: pointer; left: 20px; bottom: -60px; position: absolute; width: 40px; height: 40px; background-image: url('data:image/png;base64,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');">
+            </div> 
+        `;
+
+        navMenu[navMenu.length - 2].parentElement.parentElement.insertBefore(createElementFromHTML(template, 'mnuAtlasTool'), null);
+        document.getElementById('mnuAtlasTool').onclick = function () {
+            var wnd = document.getElementById('wndAtlasTool');
+            wnd.style.display = 'flex';
+        };
+
+        if (!document.getElementById('wndAtlasTool')) {
+            var templateExtWindow = `
+            <div id='wndAtlasTool' style='display: none; align-items: center; justify-content: center; top: 0; z-index: 1; position:absolute; width: 100%; height: 100%;'>
+                <div style='padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 450px; background: #1e1d25'>
+                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                            Show origination price
+                        </div>
+                        <div id="ext001" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext001 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                            ${extSetting.ext001}
+                        </div>                        
+                    </div>
+                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                            Show vwap price
+                        </div>
+                        <div id="ext002" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext002 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                            ${extSetting.ext002}
+                        </div>                        
+                    </div>  
+                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                            Show lower ask $
+                        </div>
+                        <div id="ext003" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext003 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                            ${extSetting.ext003}
+                        </div>                        
+                    </div>   
+                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                            Show lower ask &#916;
+                        </div>
+                        <div id="ext004" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext004 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                            ${extSetting.ext004}
+                        </div>                        
+                    </div>      
+                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                            Show earn &#916;
+                        </div>
+                        <div id="ext005" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext005 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                            ${extSetting.ext005}
+                        </div>                        
+                    </div>   
+                    <div style='border-bottom: solid 1px wheat; display:flex; height: 45px; font-family: industryMedium; '>
+                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                            Show cost &#916;
+                        </div>
+                        <div id="ext006" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext006 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                            ${extSetting.ext006}
+                        </div>                        
+                    </div>  
+                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                            Show warp speed effect
+                        </div>
+                        <div id="ext007" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext007 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                            ${extSetting.ext007}
+                        </div>                        
+                    </div>    
+                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                            Show resource countdown 
+                        </div>
+                        <div id="ext008" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext008 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                            ${extSetting.ext008}
+                        </div>                        
+                    </div>  
+                    <div id='wndAtlasTool_close' style='margin-top: 20px; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
+                        CLOSE                
+                    </div>                                                                                                                                                     
+                </div>
+            </div>
+        `;
+
+            document.body.insertBefore(createElementFromHTML(templateExtWindow, 'wndAtlasTool'), null);
+            var optionExt = document.getElementsByClassName('optionExt');
+            for (var x = 0; x < optionExt.length; x++) {
+                optionExt[x].onclick = optionExt_click;
+            }
+
+            document.getElementById('wndAtlasTool_close').onclick = function () {
+                document.getElementById('wndAtlasTool').style.display = "none";
+            }
+        }
+    }
+
     if (location.href.includes('/market/')) {
         //Fix open order visibility
         myLog('current menu: market item');
@@ -52,15 +170,16 @@ function checkMenu() {
     if (location.href.endsWith('/market') || location.href.endsWith('=ship')) {
         myLog('current menu: ships');
 
-        if (!document.getElementById('x01')) {
-            processShip();
+        if (!document.getElementById('x001')) {
+            getMarketDataApi(0, processShip);
         }
     }
 
     if (location.href.includes('/fleet')) {
         myLog('current menu: fleet');
+        animateStar = extSetting.ext007 == "YES";
 
-        if (document.getElementsByTagName('canvas').length == 0) {
+        if (extSetting.ext007 == "YES" && !document.getElementById('starCanvas')) {
             myLog('load iperspace effect');
             var container = document.querySelectorAll(`div[class^="FleetDashboardItemstyles__Header"]`);
             for (var x = 0; x < container.length; x++) {
@@ -82,28 +201,39 @@ function checkMenu() {
         //insert monthly rewards
         if (!document.getElementById('monthlyRewards')) {
             myLog('load monthly rewards');
-            monthlyRewards();
+            getMarketDataApi(0, monthlyRewards);
         }
+    } else {
+        animateStar = false;
     }
 
     if (location.href.includes('/inventory') &&
-        document.getElementsByClassName('tabSelected ')[0].innerText.toLowerCase() == 'resources' &&
-        !document.getElementById('resourceTimer')) {
+        document.getElementsByClassName('tabSelected ')[0].innerText.toLowerCase() == 'resources') {
 
-        if (fleetInStaking.length == 0) {
-            if (!document.getElementById('tabTitle')) {
-                var tabTitle = document.querySelector(`h3[class^="TabCardstyles__Title-"]`);
-                if (tabTitle) {
-                    tabTitle.insertBefore(createElementFromHTML(`<label id='tabTitle' style="display: block; color: white; text-transform: none; font-size: 14px">To view the expected consumption burn, first go to the "Faction Fleet" menu and then come back here.</label>`, 'tabTitle'), null);
+        if (extSetting.ext008 == 'YES') {
+            if (!document.getElementById('resourceTimer')) {
+                if (fleetInStaking.length == 0) {
+                    if (!document.getElementById('tabTitle')) {
+                        var tabTitle = document.querySelector(`h3[class^="TabCardstyles__Title-"]`);
+                        if (tabTitle) {
+                            tabTitle.insertBefore(createElementFromHTML(`<label id='tabTitle' style="display: block; color: white; text-transform: none; font-size: 14px">To view the expected consumption burn, first go to the "Faction Fleet" menu and then come back here.</label>`, 'tabTitle'), null);
+                        }
+                    }
+                } else {
+                    getMarketDataApi(0, checkResourceConsuming);
                 }
             }
         } else {
-            checkResourceConsuming();
+            var el = document.getElementById('resourceTimer');
+            while (el) {
+                el.outerHTML = '';
+                el = document.getElementById('resourceTimer');
+            }
         }
     }
 }
 
-function processShip() {
+function processShip(shipData) {
     myLog('process data ship');
 
     var elements = document.querySelectorAll('h3[class^="poster__PosterCountLarge-"]');
@@ -113,11 +243,36 @@ function processShip() {
         });
 
         if (shipInfo.length == 1) {
-            elements[x].insertBefore(createElementFromHTML(`<span id='x01' style="font-family: Graphik; font-style: normal; font-weight: normal; font-size: 12px; line-height: 16px; text-align: center; text-transform: uppercase; color: rgb(146, 146, 150);">vwap: ${formatterUSD.format(shipInfo[0].price)}<br>earn: ${formatterNr.format(shipInfo[0].rgl)} &#916;/day<br>cost: ${formatterNr.format(shipInfo[0].cg)} &#916;/day</span>`, "x01"), null);
+            var template = `
+                <span id='x001' style="font-family: Graphik; font-style: normal; font-weight: normal; font-size: 12px; line-height: 16px; text-align: center; text-transform: none; color: rgb(146, 146, 150);">
+            `;
+
+            if (extSetting.ext001 == "YES") {
+                template += `origination: ${formatterUSD.format(shipInfo[0].op)}<br>`;
+            }
+            if (extSetting.ext002 == "YES") {
+                template += `vwap: ${formatterUSD.format(shipInfo[0].price)}<br>`;
+            }
+            if (extSetting.ext003 == "YES") {
+                template += `lower ask $: ${formatterUSD.format(shipInfo[0].lau)}<br>`;
+            }
+            if (extSetting.ext004 == "YES") {
+                template += `lower ask &#916;: ${formatterNr.format(shipInfo[0].laa)}<br>`;
+            }
+            if (extSetting.ext005 == "YES") {
+                template += `earn: ${formatterNr.format(shipInfo[0].rgl)} &#916;/day<br>`;
+            }
+            if (extSetting.ext006 == "YES") {
+                template += `cost: ${formatterNr.format(shipInfo[0].cg)} &#916;/day`;
+            }
+
+            template += "</span>";
+
+            elements[x].insertBefore(createElementFromHTML(template, "x001"), null);
         }
     }
 }
-function checkResourceConsuming() {
+function checkResourceConsuming(shipData) {
     var templateTimer = `
         <span id='resourceTimer' style="margin: auto; display: flex; justify-content: center" class="DepletionTimerstyles__DepletionTimerWrapper-eJIqPG daWBlT">
             <span style="margin-right: 7px" class="DepletionTimerstyles__DepletionTimerIconWrapper-cdqVzB eprLwU">
@@ -190,11 +345,11 @@ function checkResourceConsuming() {
         resources[x].insertBefore(createElementFromHTML(data, 'resourceTimer'), null);
     }
 }
-function monthlyRewards() {
+function monthlyRewards(shipData) {
     var data = '';
     var template = `
             <span id="monthlyRewards" style="margin-left: 30px" class="FleetRewardsTextstyles__FleetRewardsTextWrapper-hqStiK hiQUPk">
-                <span class="FleetRewardsTextstyles__FleetRewardsLabel-jconmC jTIwjt">Monthly Rewards</span>
+                <span class="FleetRewardsTextstyles__FleetRewardsLabel-jconmC jTIwjt">Net Monthly Rewards</span>
                 <span class="FleetRewardsTextstyles__FleetRewardsValue-eIKJuX fXNYKC">??? ATLAS</span>
             </span>      
     `;
@@ -219,11 +374,23 @@ function createElementFromHTML(htmlString, id) {
     var parsedHtml = parser.parseFromString(htmlString, 'text/html');
     return parsedHtml.getElementById(id);
 }
-
-function getMarketDataApi(type) {
+function destroyStarCanvas() {
+    var elements = document.getElementsByTagName('canvas');
+    for (var x = 0; x < elements.length; x++) {
+        if (elements[x].id == 'starCanvas') {
+            elements[x].outerHTML = "";
+        }
+    }
+}
+function getMarketDataApi(type, callback) {
+    if (getMarketDataApiRunning) {
+        return;
+    }
+    getMarketDataApiRunning = true;
     callApi({ "action": "getMarketData", "type": type })
         .then(data => {
-            shipData = data;
+            callback(data);
+            getMarketDataApiRunning = false;
         });
 }
 
@@ -250,44 +417,22 @@ function initStar(container) {
     canvas.style.left = '0';
     canvas.style.top = '0';
     canvas.style.opacity = '0.6';
-
-    canvas.oncontextmenu = function (e) {
-        e.preventDefault();
-    };
+    canvas.setAttribute('id', 'starCanvas');
 
     canvas.addEventListener('mousemove', mouseMoveHandler);
-    canvas.addEventListener('mousedown', mouseDownHandler);
-    canvas.addEventListener('mouseup', mouseUpHandler);
     canvas.addEventListener('mouseenter', mouseEnterHandler);
     canvas.addEventListener('mouseleave', mouseLeaveHandler);
 
     container.appendChild(canvas);
 
-    //---
-
     var ctx = canvas.getContext('2d');
     var imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
     var pix = imageData.data;
 
-    //---
-
-    var MATHPI180 = Math.PI / 180;
-    var MATHPI2 = Math.PI * 2;
-
     var center = { x: canvas.width / 2, y: canvas.height / 2 };
 
-    //---
-
     var mouseActive = false;
-    var mouseDown = false;
     var mousePos = { x: center.x, y: center.y };
-
-    //---
-
-    var rotationSpeed = -1.00;
-    var rotationSpeedFactor = { x: 0, y: 0 };
-    rotationSpeedFactor.x = rotationSpeed / center.x;
-    rotationSpeedFactor.y = rotationSpeed / center.y;
 
     var fov = 300;
     var fovMin = 210;
@@ -300,13 +445,10 @@ function initStar(container) {
     var starSpeedMin = starSpeed;
     var starSpeedMax = 200;
     var starDistance = 8000;
-    var starRotation = 0;
 
     var backgroundColor = { r: 0, g: 0, b: 0, a: 0 };
 
     var colorInvertValue = 0;
-
-    //---
 
     function clearImageData() {
 
@@ -465,8 +607,9 @@ function initStar(container) {
     })();
 
     function animloop() {
-
-        requestAnimFrame(animloop);
+        if (animateStar) {
+            requestAnimFrame(animloop);
+        }
         render();
 
     };
@@ -507,7 +650,6 @@ function initStar(container) {
         //---
 
         if (!mouseActive) {
-
             fov += 0.5;
 
             if (fov > fovMax)
@@ -598,19 +740,6 @@ function initStar(container) {
 
             }
 
-            if (mouseDown) {
-
-                //rotation
-                var radians = MATHPI180 * starRotation;
-
-                var cos = Math.cos(radians);
-                var sin = Math.sin(radians);
-
-                star.x = (cos * (star.ox - center.x)) + (sin * (star.oy - center.y)) + center.x,
-                    star.y = (cos * (star.oy - center.y)) - (sin * (star.ox - center.x)) + center.y;
-
-            }
-
         }
 
         //---
@@ -629,14 +758,6 @@ function initStar(container) {
 
         }
 
-        //---
-
-        if (mouseDown) {
-
-            starRotation -= 0.5;
-
-        }
-
     };
 
     //---
@@ -648,37 +769,12 @@ function initStar(container) {
     };
 
     function mouseEnterHandler(event) {
-
         mouseActive = true;
-
     };
 
     function mouseLeaveHandler(event) {
-
         mouseActive = false;
-
-        mouseDown = false;
-
     };
-
-    function mouseDownHandler(event) {
-
-        mouseDown = true;
-
-        speed = 0;
-
-    };
-
-    function mouseUpHandler(event) {
-
-        mouseDown = false;
-
-        speed = 0.25;
-
-    };
-
-    //---
-
     function getMousePos(canvas, event) {
 
         var rect = canvas.getBoundingClientRect();
@@ -687,54 +783,22 @@ function initStar(container) {
 
     };
 
-    //---
-
-    function touchStartHandler(event) {
-
-        event.preventDefault();
-
-        mouseDown = true;
-        mouseActive = true;
-
-    };
-
-    function touchEndHandler(event) {
-
-        event.preventDefault();
-
-        mouseDown = false;
-        mouseActive = false;
-
-    };
-
-    function touchMoveHandler(event) {
-
-        event.preventDefault();
-
-        mousePos = getTouchPos(canvas, event);
-
-    };
-
-    function touchCancelHandler(event) {
-
-        mouseDown = false;
-        mouseActive = false;
-
-    };
-
-    //---
-
-    function getTouchPos(canvas, event) {
-
-        var rect = canvas.getBoundingClientRect();
-
-        return { x: event.touches[0].clientX - rect.left, y: event.touches[0].clientY - rect.top };
-
-    };
-
-    //---
-
     addParticles();
     animloop();
+}
 
+function optionExt_click(sender) {
+    var el = document.getElementById(sender.target.id);
+
+    if (extSetting[el.id] == 'YES') {
+        extSetting[el.id] = "NO";
+        el.style.color = "gray";
+    } else {
+        extSetting[el.id] = "YES";
+        el.style.color = "orange";
+    }
+
+    el.innerText = extSetting[el.id];
+
+    localStorage.extSetting = JSON.stringify(extSetting);
 }
