@@ -67,7 +67,7 @@ function checkMenu() {
                 <div style='padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
                     <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>
                         <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
-                            ALT + P: show/hide coin prices window                
+                            ALT + p --> show/hide coin prices window                
                         </div>     
                         <div style='display:flex; height: 45px; font-family: industryMedium; '>
                             <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
