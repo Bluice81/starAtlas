@@ -3,6 +3,7 @@ let fleetInStaking = [];
 let dateTimeout = new Date();
 let animateStar = false;
 let getMarketDataApiRunning = false;
+let oldUpdateCoinPrice = new Date();
 let extSetting = {
     ext001: "YES",
     ext002: "YES",
@@ -42,6 +43,8 @@ var formatterNr = new Intl.NumberFormat('en-US', {
 setInterval(checkMenu, 500);
 
 function checkMenu() {
+    initPriceCoin();
+
     //create extension menu if not exists
     if (!document.getElementById('mnuAtlasTool')) {
         myLog('create extension menu');
@@ -62,82 +65,87 @@ function checkMenu() {
             var templateExtWindow = `
             <div id='wndAtlasTool' style='display: none; align-items: center; justify-content: center; top: 0; z-index: 1; position:absolute; width: 100%; height: 100%;'>
                 <div style='padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
-                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
-                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
-                            Show origination price
+                    <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>
+                        <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
+                            ALT + P: show/hide coin prices window                
+                        </div>     
+                        <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                            <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                                Show origination price
+                            </div>
+                            <div id="ext001" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext001 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                                ${extSetting.ext001}
+                            </div>                        
                         </div>
-                        <div id="ext001" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext001 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
-                            ${extSetting.ext001}
-                        </div>                        
+                        <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                            <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                                Show vwap price
+                            </div>
+                            <div id="ext002" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext002 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                                ${extSetting.ext002}
+                            </div>                        
+                        </div>  
+                        <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                            <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                                Show lower ask $
+                            </div>
+                            <div id="ext003" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext003 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                                ${extSetting.ext003}
+                            </div>                        
+                        </div>   
+                        <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                            <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                                Show lower ask &#916;
+                            </div>
+                            <div id="ext004" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext004 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                                ${extSetting.ext004}
+                            </div>                        
+                        </div>      
+                        <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                            <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                                Show earn &#916;
+                            </div>
+                            <div id="ext005" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext005 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                                ${extSetting.ext005}
+                            </div>                        
+                        </div>   
+                        <div style='border-bottom: solid 1px wheat; display:flex; height: 45px; font-family: industryMedium; '>
+                            <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                                Show cost &#916;
+                            </div>
+                            <div id="ext006" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext006 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                                ${extSetting.ext006}
+                            </div>                        
+                        </div>  
+                        <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                            <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                                Show warp speed effect
+                            </div>
+                            <div id="ext007" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext007 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                                ${extSetting.ext007}
+                            </div>                        
+                        </div>    
+                        <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                            <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                                Show resource countdown 
+                            </div>
+                            <div id="ext008" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext008 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                                ${extSetting.ext008}
+                            </div>                        
+                        </div>  
+                        <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                            <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                                Fix website layout error 
+                            </div>
+                            <div id="ext009" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext009 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                                ${extSetting.ext009}
+                            </div>                        
+                        </div>                                                                                                                                                                     
                     </div>
-                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
-                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
-                            Show vwap price
-                        </div>
-                        <div id="ext002" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext002 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
-                            ${extSetting.ext002}
-                        </div>                        
-                    </div>  
-                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
-                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
-                            Show lower ask $
-                        </div>
-                        <div id="ext003" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext003 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
-                            ${extSetting.ext003}
-                        </div>                        
-                    </div>   
-                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
-                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
-                            Show lower ask &#916;
-                        </div>
-                        <div id="ext004" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext004 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
-                            ${extSetting.ext004}
-                        </div>                        
-                    </div>      
-                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
-                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
-                            Show earn &#916;
-                        </div>
-                        <div id="ext005" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext005 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
-                            ${extSetting.ext005}
-                        </div>                        
-                    </div>   
-                    <div style='border-bottom: solid 1px wheat; display:flex; height: 45px; font-family: industryMedium; '>
-                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
-                            Show cost &#916;
-                        </div>
-                        <div id="ext006" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext006 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
-                            ${extSetting.ext006}
-                        </div>                        
-                    </div>  
-                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
-                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
-                            Show warp speed effect
-                        </div>
-                        <div id="ext007" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext007 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
-                            ${extSetting.ext007}
-                        </div>                        
-                    </div>    
-                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
-                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
-                            Show resource countdown 
-                        </div>
-                        <div id="ext008" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext008 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
-                            ${extSetting.ext008}
-                        </div>                        
-                    </div>  
-                    <div style='display:flex; height: 45px; font-family: industryMedium; '>
-                        <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
-                            Fix website layout error 
-                        </div>
-                        <div id="ext009" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext009 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
-                            ${extSetting.ext009}
-                        </div>                        
-                    </div>                      
                     <div id='wndAtlasTool_close' style='margin-top: 20px; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
                         CLOSE                
-                    </div>                                                                                                                                                     
-                </div>
+                    </div>       
+                <div>            
             </div>
         `;
 
@@ -180,7 +188,7 @@ function checkMenu() {
     }
 
     if (location.href.endsWith('/market') || location.href.endsWith('=ship')) {
-        myLog('current menu: ships');
+        //myLog('current menu: ships');
 
         if (!document.getElementById('x001')) {
             getMarketDataApi(0, processShip);
@@ -188,14 +196,15 @@ function checkMenu() {
     }
 
     if (location.href.includes('/fleet')) {
-        myLog('current menu: fleet');
         animateStar = extSetting.ext007 == "YES";
 
         if (extSetting.ext007 == "YES" && !document.getElementById('starCanvas')) {
-            myLog('load iperspace effect');
             var container = document.querySelectorAll(`div[class^="FleetDashboardItemstyles__Header"]`);
-            for (var x = 0; x < container.length; x++) {
-                initStar(container[x]);
+            if (container.length > 0) {
+                myLog('load iperspace effect');
+                for (var x = 0; x < container.length; x++) {
+                    initStar(container[x]);
+                }
             }
         }
 
@@ -212,8 +221,11 @@ function checkMenu() {
 
         //insert monthly rewards
         if (!document.getElementById('monthlyRewards')) {
-            myLog('load monthly rewards');
-            getMarketDataApi(0, monthlyRewards);
+            var fleet = document.querySelectorAll(`p[class^="FleetDashboardItemstyles__FleetName-"]`);
+            if (fleet.length > 0) {
+                myLog('load monthly rewards');
+                getMarketDataApi(0, monthlyRewards);
+            }
         }
     } else {
         animateStar = false;
@@ -276,7 +288,7 @@ function processShip(shipData) {
                 template += `lower ask $: ${formatterUSD.format(shipInfo[0].lau)}<br>`;
             }
             if (extSetting.ext004 == "YES") {
-                template += `lower ask &#916;: ${formatterNr.format(shipInfo[0].laa)}<br>`;
+                template += `lower ask &#916;/$: ${formatterNr.format(shipInfo[0].laa)}<br>`;
             }
             if (extSetting.ext005 == "YES") {
                 template += `earn: ${formatterNr.format(shipInfo[0].rgl)} &#916;/day<br>`;
@@ -820,4 +832,123 @@ function optionExt_click(sender) {
     el.innerText = extSetting[el.id];
 
     localStorage.extSetting = JSON.stringify(extSetting);
+}
+
+function initPriceCoin() {
+    if (!document.getElementById('divPrice')) {
+        var template = `
+            <div id='divPrice' style='display:none; user-select: none;padding: 10px; box-shadow:0px 0px 40px 5px #000; border-radius: 10px; z-index: 1000; width: 320px; height: 150px; background: white; position: absolute; top: 300px; left: 400px'>
+                <div style='display: flex; padding-top: 10px'>
+                    <div style='text-transform: uppercase; font-size:24px; font-family: tungstenBook; flex: 0 1 auto; height: 30px; width: 100px; display: flex; justify-content: center'>
+                        atlas
+                    </div>
+                    <div id='priceAtlas' style='flex: 1 1 auto; height: 30px; background: url("https://lnk.totemzetasoft.it/starAtlas/api/price/star-atlas.png"); background-size:cover; background-repeat: no-repeat; margin-right: 10px'>
+                    </div>
+                </div>	
+                <div style='display: flex; padding-top: 10px'>
+                    <div style='text-transform: uppercase; font-size:24px; font-family: tungstenBook; flex: 0 1 auto; height: 30px; width: 100px; display: flex; justify-content: center'>
+                        polis
+                    </div>
+                    <div id='pricePolis' style='flex: 1 1 auto; height: 30px; background: url("https://lnk.totemzetasoft.it/starAtlas/api/price/star-atlas-polis.png"); background-size:cover; background-repeat: no-repeat; margin-right: 10px'>
+                    </div>
+                </div>	
+                <div style='display: flex; padding-top: 10px'>
+                    <div style='text-transform: uppercase; font-size:24px; font-family: tungstenBook; flex: 0 1 auto; height: 30px; width: 100px; display: flex; justify-content: center'>
+                        solana
+                    </div>
+                    <div id='priceSolana' style='flex: 1 1 auto; height: 30px; background: url("https://lnk.totemzetasoft.it/starAtlas/api/price/solana.png"); background-size:cover; background-repeat: no-repeat; margin-right: 10px'>
+                    </div>
+                </div>			
+            </div>
+        `;
+
+        document.body.appendChild(createElementFromHTML(template, 'divPrice'), null);
+
+
+        function makeDragable(dragHandle, dragTarget) {
+            let dragObj = null; //object to be moved
+            let xOffset = 0; //used to prevent dragged object jumping to mouse location
+            let yOffset = 0;
+
+            document.querySelector(dragHandle).addEventListener("mousedown", startDrag, true);
+            document.querySelector(dragHandle).addEventListener("touchstart", startDrag, true);
+
+            /*sets offset parameters and starts listening for mouse-move*/
+            function startDrag(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dragObj = document.querySelector(dragTarget);
+                dragObj.style.position = "absolute";
+                let rect = dragObj.getBoundingClientRect();
+
+                if (e.type == "mousedown") {
+                    xOffset = e.clientX - rect.left; //clientX and getBoundingClientRect() both use viewable area adjusted when scrolling aka 'viewport'
+                    yOffset = e.clientY - rect.top;
+                    window.addEventListener('mousemove', dragObject, true);
+                } else if (e.type == "touchstart") {
+                    xOffset = e.targetTouches[0].clientX - rect.left;
+                    yOffset = e.targetTouches[0].clientY - rect.top;
+                    window.addEventListener('touchmove', dragObject, true);
+                }
+            }
+
+            /*Drag object*/
+            function dragObject(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (dragObj == null) {
+                    return; // if there is no object being dragged then do nothing
+                } else if (e.type == "mousemove") {
+                    dragObj.style.left = e.clientX - xOffset + "px"; // adjust location of dragged object so doesn't jump to mouse position
+                    dragObj.style.top = e.clientY - yOffset + "px";
+                } else if (e.type == "touchmove") {
+                    dragObj.style.left = e.targetTouches[0].clientX - xOffset + "px"; // adjust location of dragged object so doesn't jump to mouse position
+                    dragObj.style.top = e.targetTouches[0].clientY - yOffset + "px";
+                }
+            }
+
+            /*End dragging*/
+            document.onmouseup = function (e) {
+                if (dragObj) {
+                    dragObj = null;
+                    window.removeEventListener('mousemove', dragObject, true);
+                    window.removeEventListener('touchmove', dragObject, true);
+                }
+            }
+        }
+
+        makeDragable('#divPrice', '#divPrice');
+
+        document.onkeyup = function (event) {
+            if (event.altKey && event.key === "p") {
+                var el = document.getElementById('divPrice');
+                if (el.style.display == 'none') {
+                    el.style.display = 'block';
+                } else {
+                    el.style.display = 'none';
+                }
+            }
+        };
+    } else if (document.getElementById('divPrice').style.display == 'block') {
+        //update price
+        if ((new Date() - oldUpdateCoinPrice) / 1000 > 20) {
+            myLog('update coin price');
+
+            var tmp = document.getElementById('priceAtlas').style.background;
+            document.getElementById('priceAtlas').style.background = tmp.split('.png')[0] + '.png?t=' + getTicks() + tmp.split('.png')[1];
+
+            tmp = document.getElementById('pricePolis').style.background;
+            document.getElementById('pricePolis').style.background = tmp.split('.png')[0] + '.png?t=' + getTicks() + tmp.split('.png')[1];
+
+            tmp = document.getElementById('priceSolana').style.background;
+            document.getElementById('priceSolana').style.background = tmp.split('.png')[0] + '.png?t=' + getTicks() + tmp.split('.png')[1];
+
+            oldUpdateCoinPrice = new Date;
+        }
+    }
+}
+function getTicks() {
+    var now = new Date();
+    return now.getTime();
 }
