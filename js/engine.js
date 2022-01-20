@@ -64,7 +64,10 @@ function checkMenu() {
         if (!document.getElementById('wndAtlasTool')) {
             var templateExtWindow = `
             <div id='wndAtlasTool' style='display: none; align-items: center; justify-content: center; top: 0; z-index: 1; position:absolute; width: 100%; height: 100%;'>
-                <div style='padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
+                <div style='position: relative; padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
+                    <div style='font-size: 10px; position:absolute; bottom: 10px; left: 10px; color: white; font-family: industryMedium; '>
+                        v. 2.8 20/01/2022             
+                    </div>     
                     <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>
                         <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
                             ALT + p --> show/hide coin prices window                
@@ -920,8 +923,8 @@ function initPriceCoin() {
 
         makeDragable('#divPrice', '#divPrice');
 
-        document.onkeyup = function (event) {
-            if (event.altKey && event.key === "p") {
+        document.onkeydown = function (event) {
+            if (event.altKey && event.code == "KeyP"){
                 var el = document.getElementById('divPrice');
                 if (el.style.display == 'none') {
                     el.style.display = 'block';
