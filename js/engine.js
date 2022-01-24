@@ -4,6 +4,8 @@ let dateTimeout = new Date();
 let animateStar = false;
 let getMarketDataApiRunning = false;
 let oldUpdateCoinPrice = new Date();
+let cvf = 0.0; //current value market usdc lower ask
+
 let extSetting = {
     ext001: "YES",
     ext002: "YES",
@@ -13,7 +15,8 @@ let extSetting = {
     ext006: "YES",
     ext007: "YES",
     ext008: "YES",
-    ext009: "YES"
+    ext009: "YES",
+    ext010: "YES"
 }
 
 function myLog(text) {
@@ -22,12 +25,41 @@ function myLog(text) {
 
 myLog('load extension');
 
+document.onkeydown = function (event) {
+    if (event.altKey && event.code == "KeyP") {
+        var el = document.getElementById('divPrice');
+        if (el.style.display == 'none') {
+            el.style.display = 'block';
+        } else {
+            el.style.display = 'none';
+        }
+    }
+    if (event.altKey && event.code == "KeyG") {
+        var el = document.getElementById('divChart');
+        if (el.style.display == 'none') {
+            el.style.display = 'block';
+        } else {
+            el.style.display = 'none';
+        }
+    }
+};
+
+window.addEventListener('message', function (event) {
+    if (event.data.func == 'closeRoiWindow') {
+        document.getElementById('divChart').style.display = 'none';
+        document.activeElement.blur();
+    }
+}, false);
+
 //load extSetting from localstorage if exists
 if (localStorage.extSetting) {
     extSetting = JSON.parse(localStorage.extSetting);
     if (!extSetting.ext009) {
         extSetting.ext009 = "YES";
     }
+    if (!extSetting.ext010) {
+        extSetting.ext010 = "YES";
+    }    
 }
 
 var formatterUSD = new Intl.NumberFormat('en-US', {
@@ -45,20 +77,42 @@ setInterval(checkMenu, 500);
 function checkMenu() {
     initPriceCoin();
 
+    initChartWindow();
+
     //create extension menu if not exists
     if (!document.getElementById('mnuAtlasTool')) {
         myLog('create extension menu');
         var navMenu = document.querySelectorAll(`div[class^="NavItemstyles__"]`);
 
         var template = `
-            <div id='mnuAtlasTool' style="background-size: contain; cursor: pointer; left: 20px; bottom: -60px; position: absolute; width: 40px; height: 40px; background-image: url('data:image/png;base64,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');">
-            </div> 
+            <div id='mnuAtlasTool' style='left: 0px; bottom: -108px; position: absolute; width: 80px;'>
+                <div style='display: flex; flex-flow: column'>
+                    <div id='mnuSetting' style="width: 100%; background-position: center; background-size: 36px; height: 40px; cursor: pointer; background-image: url('data:image/png;base64,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'); background-repeat: no-repeat">
+                    </div> 
+                    <div id='divCvf' title='Current value of fleet (click for refresh)' style='letter-spacing: 0.1em; cursor: pointer; user-select: none; margin: auto; font-size: 18px; padding-top: 5px'>
+                    </div> 
+                    <div id='divTnf' title='Net farm atlas for one day (click for refresh)' style='letter-spacing: 0.1em; cursor: pointer; user-select: none; margin: auto; font-size: 18px; padding-top: 5px'>
+                    </div> 
+                <div>
+            </div>
         `;
 
         navMenu[navMenu.length - 2].parentElement.parentElement.insertBefore(createElementFromHTML(template, 'mnuAtlasTool'), null);
-        document.getElementById('mnuAtlasTool').onclick = function () {
+        document.getElementById('mnuSetting').onclick = function () {
             var wnd = document.getElementById('wndAtlasTool');
             wnd.style.display = 'flex';
+        };
+        document.getElementById('divCvf').onclick = function () {
+            var el = document.getElementById('divCvf');
+            el.style.pointerEvents = 'none';
+            el.style.color = 'gray';
+            getMarketDataApi(0, retrieveCvf);
+        };
+        document.getElementById('divTnf').onclick = function () {
+            var el = document.getElementById('divTnf');
+            el.style.pointerEvents = 'none';
+            el.style.color = 'gray';
+            getMarketDataApi(0, retrieveTnfDay);
         };
 
         if (!document.getElementById('wndAtlasTool')) {
@@ -66,12 +120,15 @@ function checkMenu() {
             <div id='wndAtlasTool' style='display: none; align-items: center; justify-content: center; top: 0; z-index: 1; position:absolute; width: 100%; height: 100%;'>
                 <div style='position: relative; padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
                     <div style='font-size: 10px; position:absolute; bottom: 10px; left: 10px; color: white; font-family: industryMedium; '>
-                        v. 2.8 20/01/2022             
+                        v. 3.0 24/01/2022             
                     </div>     
                     <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>
                         <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
                             ALT + p --> show/hide coin prices window                
-                        </div>     
+                        </div>   
+                        <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
+                            ALT + g --> show/hide Roi Tool              
+                        </div>                            
                         <div style='display:flex; height: 45px; font-family: industryMedium; '>
                             <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
                                 Show origination price
@@ -143,7 +200,15 @@ function checkMenu() {
                             <div id="ext009" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext009 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
                                 ${extSetting.ext009}
                             </div>                        
-                        </div>                                                                                                                                                                     
+                        </div>       
+                        <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                            <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                                Hide cvf and tfn in home page
+                            </div>
+                            <div id="ext010" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext010 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                                ${extSetting.ext010}
+                            </div>                        
+                        </div>                                                                                                                                                                                          
                     </div>
                     <div id='wndAtlasTool_close' style='margin-top: 20px; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
                         CLOSE                
@@ -166,10 +231,9 @@ function checkMenu() {
 
     if (location.href.includes('/market/') && extSetting.ext009 == "YES") {
         //Fix open order visibility
-        myLog('current menu: market item');
-
         var el = document.querySelector(`div[class^="styles__ActionButtons-"]`);
         if (el && el.style.margin == '20px') {
+            myLog('fix open orders layout');
             return;
         }
 
@@ -269,6 +333,8 @@ function checkMenu() {
 
 function processShip(shipData) {
     myLog('process data ship');
+
+    retrieveCvf(shipData);
 
     var elements = document.querySelectorAll('h3[class^="poster__PosterCountLarge-"]');
     for (var x = 0; x < elements.length; x++) {
@@ -380,6 +446,8 @@ function checkResourceConsuming(shipData) {
     }
 }
 function monthlyRewards(shipData) {
+    retrieveCvf(shipData);
+
     var data = '';
     var template = `
             <span id="monthlyRewards" style="margin-left: 30px" class="FleetRewardsTextstyles__FleetRewardsTextWrapper-hqStiK hiQUPk">
@@ -922,17 +990,6 @@ function initPriceCoin() {
         }
 
         makeDragable('#divPrice', '#divPrice');
-
-        document.onkeydown = function (event) {
-            if (event.altKey && event.code == "KeyP"){
-                var el = document.getElementById('divPrice');
-                if (el.style.display == 'none') {
-                    el.style.display = 'block';
-                } else {
-                    el.style.display = 'none';
-                }
-            }
-        };
     } else if (document.getElementById('divPrice').style.display == 'block') {
         //update price
         if ((new Date() - oldUpdateCoinPrice) / 1000 > 20) {
@@ -954,4 +1011,65 @@ function initPriceCoin() {
 function getTicks() {
     var now = new Date();
     return now.getTime();
+}
+function initChartWindow() {
+    if (!document.getElementById('divChart')) {
+        var templateTest = `<iframe style='border:0; position:absolute; top:0; z-index: 1000; display:none; width:100%;height:100%' id='divChart' src="https://lnk.totemzetasoft.it/starAtlas/roi.html"></iframe>`;
+
+        document.body.appendChild(createElementFromHTML(templateTest, 'divChart'), null);
+    }
+}
+
+function retrieveCvf(shipData) {
+    cvf = 0;
+
+    for (var x = 0; x < fleetInStaking.length; x++) {
+        var shipInfo = shipData.filter(function (el) {
+            return el.name == fleetInStaking[x].name;
+        });
+
+        if (shipInfo.length == 1) {
+            cvf += fleetInStaking[x].nr * shipInfo[0].lau;
+        }
+    }
+
+    var el = document.getElementById('divCvf');
+    if (el) {
+        if (extSetting.ext010 == "YES"){
+            el.innerHTML = '$xxx';
+        }else{
+            el.innerText = formatterUSD.format(cvf);
+        }
+
+        el.style.color = 'white';
+        el.style.pointerEvents = 'all';
+    }
+
+    retrieveTnfDay(shipData)
+}
+
+function retrieveTnfDay(shipData) {
+    //total net farm for one day
+    var tnf = 0;
+
+    for (var x = 0; x < fleetInStaking.length; x++) {
+        var shipInfo = shipData.filter(function (el) {
+            return el.name == fleetInStaking[x].name;
+        });
+
+        if (shipInfo.length == 1) {
+            tnf += fleetInStaking[x].nr * (shipInfo[0].rgl - shipInfo[0].cg);
+        }
+    }
+
+    var el = document.getElementById('divTnf');
+    if (el) {
+        if (extSetting.ext010 == "YES"){
+            el.innerText = 'xxx/d';
+        }else{
+            el.innerText = formatterNr.format(tnf) + '/d';
+        }
+        el.style.color = 'white';
+        el.style.pointerEvents = 'all';
+    }
 }
