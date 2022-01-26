@@ -5,6 +5,7 @@ let animateStar = false;
 let getMarketDataApiRunning = false;
 let oldUpdateCoinPrice = new Date();
 let cvf = 0.0; //current value market usdc lower ask
+let cacheShipData;
 
 let extSetting = {
     ext001: "YES",
@@ -59,7 +60,7 @@ if (localStorage.extSetting) {
     }
     if (!extSetting.ext010) {
         extSetting.ext010 = "YES";
-    }    
+    }
 }
 
 var formatterUSD = new Intl.NumberFormat('en-US', {
@@ -120,7 +121,7 @@ function checkMenu() {
             <div id='wndAtlasTool' style='display: none; align-items: center; justify-content: center; top: 0; z-index: 1; position:absolute; width: 100%; height: 100%;'>
                 <div style='position: relative; padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
                     <div style='font-size: 10px; position:absolute; bottom: 10px; left: 10px; color: white; font-family: industryMedium; '>
-                        v. 3.0 24/01/2022             
+                        v. 3.1 26/01/2022             
                     </div>     
                     <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>
                         <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
@@ -229,28 +230,32 @@ function checkMenu() {
         }
     }
 
-    if (location.href.includes('/market/') && extSetting.ext009 == "YES") {
-        //Fix open order visibility
-        var el = document.querySelector(`div[class^="styles__ActionButtons-"]`);
-        if (el && el.style.margin == '20px') {
-            myLog('fix open orders layout');
-            return;
-        }
+    if (location.href.includes('/market/')) {
+        initBuyResources();
 
-        if (el) {
-            el.style.margin = '20px';
-        }
+        if (extSetting.ext009 == "YES") {
+            //Fix open order visibility
+            var el = document.querySelector(`div[class^="styles__ActionButtons-"]`);
+            if (el && el.style.margin == '20px') {
+                //myLog('fix open orders layout');
+                return;
+            }
 
-        el = document.querySelector(`div[class^="styles__OpenOrdersWrapper-"]`);
-        if (el) {
-            el.style.overflowy = 'scroll';
-            el.style.margin = '0';
-            el.style.height = '120px';
-        }
+            if (el) {
+                el.style.margin = '20px';
+            }
 
-        el = document.querySelector(`div[class^="styles__DexOpenOrdersWrapper-"]`);
-        if (el) {
-            el.style.height = 'max-content';
+            el = document.querySelector(`div[class^="styles__OpenOrdersWrapper-"]`);
+            if (el) {
+                el.style.overflowy = 'scroll';
+                el.style.margin = '0';
+                el.style.height = '120px';
+            }
+
+            el = document.querySelector(`div[class^="styles__DexOpenOrdersWrapper-"]`);
+            if (el) {
+                el.style.height = 'max-content';
+            }
         }
     }
 
@@ -398,7 +403,6 @@ function checkResourceConsuming(shipData) {
     `;
 
     var resources = document.querySelectorAll(`h3[class^="poster__PosterCountLarge-"]`);
-    var resourcesQta = document.querySelectorAll(`p[class^="generic__StatValue-"]`);
     var totalFdH = 0;
     var totalFudH = 0;
     var totalAdH = 0;
@@ -407,33 +411,33 @@ function checkResourceConsuming(shipData) {
     var vHour = 0;
     var vValue = 0.0;
 
-    //Calculate hour consuming
+    //Calculate daily consuming
     for (var x = 0; x < fleetInStaking.length; x++) {
         var shipInfo = shipData.filter(function (el) {
             return el.name == fleetInStaking[x].name;
         });
 
         if (shipInfo.length == 1) {
-            totalFdH += fleetInStaking[x].nr * shipInfo[0].fd * 60;
-            totalFudH += fleetInStaking[x].nr * shipInfo[0].fud * 60;
-            totalAdH += fleetInStaking[x].nr * shipInfo[0].ad * 60;
-            totalRdH += fleetInStaking[x].nr * shipInfo[0].rd * 60;
+            totalFdH += fleetInStaking[x].nr * shipInfo[0].fd * 60 * 24;
+            totalFudH += fleetInStaking[x].nr * shipInfo[0].fud * 60 * 24;
+            totalAdH += fleetInStaking[x].nr * shipInfo[0].ad * 60 * 24;
+            totalRdH += fleetInStaking[x].nr * shipInfo[0].rd * 60 * 24;
         }
     }
 
     for (var x = 0; x < resources.length; x++) {
         switch (resources[x].innerText.toLocaleLowerCase()) {
             case "fuel":
-                vValue = parseFloat(resourcesQta[0].innerText.split(" ")[0]) / (parseFloat(totalFudH) * 24.0);
+                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.split(" ")[0]) / totalFudH;
                 break;
             case "food":
-                vValue = parseFloat(resourcesQta[1].innerText.split(" ")[0]) / (totalFdH * 24.0);
+                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.split(" ")[0]) / totalFdH;
                 break;
             case "ammunition":
-                vValue = parseFloat(resourcesQta[2].innerText.split(" ")[0]) / (totalAdH * 24.0);
+                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.split(" ")[0]) / totalAdH;
                 break;
             case "toolkit":
-                vValue = parseFloat(resourcesQta[3].innerText.split(" ")[0]) / (totalRdH * 24.0);
+                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.split(" ")[0]) / totalRdH;
                 break;
         }
 
@@ -1035,9 +1039,9 @@ function retrieveCvf(shipData) {
 
     var el = document.getElementById('divCvf');
     if (el) {
-        if (extSetting.ext010 == "YES"){
+        if (extSetting.ext010 == "YES") {
             el.innerHTML = '$xxx';
-        }else{
+        } else {
             el.innerText = formatterUSD.format(cvf);
         }
 
@@ -1064,12 +1068,146 @@ function retrieveTnfDay(shipData) {
 
     var el = document.getElementById('divTnf');
     if (el) {
-        if (extSetting.ext010 == "YES"){
+        if (extSetting.ext010 == "YES") {
             el.innerText = 'xxx/d';
-        }else{
+        } else {
             el.innerText = formatterNr.format(tnf) + '/d';
         }
         el.style.color = 'white';
         el.style.pointerEvents = 'all';
     }
+}
+
+function initBuyResources() {
+    var el = document.querySelector(`div[class^="NumberInputstyles__Wrapper-"]`);
+
+    if (!document.getElementById('buyDay') && el && fleetInStaking.length > 0) {
+        var template = `
+    <div id='buyDay' style="margin-right: 15px;" class="NumberInputstyles__Wrapper-gnPFvn bExyxS NumberInputWrapper">
+        <label>For x day</label>
+        <span label="size" style="width: 101px" class="NumberInputstyles__InputWrapper-gLvgTt fSjyWd">
+            <input id='buyDayTxt' readonly='true' type="number" style="width: 101px" min="0" max="365" value="0">
+            <span class="NumberInputstyles__ButtonWrapper-eUHVOh liZuZM">
+                <button id='buyDayUp' class="NumberInputstyles__IncrementButton-gGByfb idyQxT">
+                    <span style="opacity: 1;" class="styles__SAIcon-ijmsNY fLpDJB">
+                        <span>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="injected-svg sa-icon-svg" data-src="/icons/step-up-24.svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                                <g id="General/Step Up">
+                                    <g id="Background-Stroke">
+                                        <path id="Line-183" d="M7 14L12 9L17 14" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </g>
+                                </g>
+                            </svg>
+                        </span>
+                    </span>
+                </button>
+                <button id='buyDayDown' disabled="" class="NumberInputstyles__IncrementButton-gGByfb idwzqS">
+                    <span style="opacity: 1;" class="styles__SAIcon-ijmsNY fLpDJB">
+                        <span>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="injected-svg sa-icon-svg" data-src="/icons/step-down-24.svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                                <g id="General/Step Down">
+                                    <g id="Background-Stroke">
+                                        <path id="Line-184" d="M17 10L12 15L7 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </g>
+                                </g>
+                            </svg>
+                        </span>
+                    </span>
+                </button>
+            </span>
+        </span>
+    </div>
+    `;
+
+        el.parentElement.insertBefore(createElementFromHTML(template, "buyDay"), el.parentElement.firstChild);
+
+
+        document.getElementById('buyDayUp').onclick = function () {
+            var txt = document.getElementById('buyDayTxt');
+            var newValue = 0;
+
+            if (!isNaN(txt.value)) {
+                newValue = parseInt(txt.value);
+            }
+
+            newValue += 1;
+
+            if (newValue <= 365) {
+                txt.value = newValue;
+                var btnDown = document.getElementById('buyDayDown');
+                btnDown.removeAttribute('disabled');
+                btnDown.style.pointerEvents = 'all';
+
+                getQtaForDay(newValue);
+            }
+        }
+
+        document.getElementById('buyDayDown').onclick = function () {
+            var txt = document.getElementById('buyDayTxt');
+            var newValue = 0;
+
+            if (!isNaN(txt.value)) {
+                newValue = parseInt(txt.value);
+            }
+
+            newValue -= 1;
+
+            if (newValue >= 0) {
+                txt.value = newValue;
+
+                getQtaForDay(newValue);
+            }
+
+            if (newValue == 0) {
+                var btnDown = document.getElementById('buyDayDown');
+                btnDown.setAttribute('disabled', '');
+                btnDown.style.pointerEvents = 'none';
+            }
+        }
+
+        getMarketDataApi(0, setCacheShipData);
+    }
+
+}
+function setCacheShipData(shipData) {
+    cacheShipData = shipData;
+}
+function getQtaForDay(numDay) {
+    var owned = document.querySelector(`span[class^="TechButtonstyles__TagText-"]`);
+    var ownedQta = owned.innerText.split('K')[0].replace('.', '').replace(',', '');
+    if (isNaN(ownedQta)) {
+        ownedQta = 0;
+    } else {
+        ownedQta = parseInt(ownedQta);
+    }
+
+    var dayQta = 0.0;
+
+    for (var x = 0; x < fleetInStaking.length; x++) {
+        var shipInfo = cacheShipData.filter(function (el) {
+            return el.name == fleetInStaking[x].name;
+        });
+
+        if (shipInfo.length == 1) {
+            switch (document.getElementsByTagName('h1')[0].innerText.toLowerCase()) {
+                case "food":
+                    dayQta += fleetInStaking[x].nr * shipInfo[0].fd * 60 * 24;
+                    break;
+                case "fuel":
+                    dayQta += fleetInStaking[x].nr * shipInfo[0].fud * 60 * 24;
+                    break;
+                case "ammunition":
+                    dayQta += fleetInStaking[x].nr * shipInfo[0].ad * 60 * 24;
+                    break;
+                case "toolkit":
+                    dayQta += fleetInStaking[x].nr * shipInfo[0].rd * 60 * 24;
+                    break;
+            }
+        }
+    }
+
+    var el = document.getElementsByTagName('label')[1];
+    var request = dayQta * parseInt(numDay) - ownedQta;
+
+    el.innerText = 'SIZE: ' + (request < 0 ? 0 : request);
 }
