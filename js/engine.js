@@ -306,6 +306,8 @@ function checkMenu() {
     if (location.href.includes('/inventory') &&
         document.getElementsByClassName('tabSelected ')[0].innerText.toLowerCase() == 'resources') {
 
+        // console.log('im in inventory');
+
         if (extSetting.ext008 == 'YES') {
             if (!document.getElementById('resourceTimer')) {
                 if (fleetInStaking.length == 0) {
@@ -367,6 +369,11 @@ function processShip(shipData) {
             if (extSetting.ext005 == "YES") {
                 template += `earn: ${formatterNr.format(shipInfo[0].rgl)} &#916;/day<br>`;
             }
+            if( extSetting.ext005 == "YES" && 
+                extSetting.ext006 == "YES")
+                {
+                    template += `earn (net): ${formatterNr.format(shipInfo[0].rgl - shipInfo[0].cg)} &#916;/day<br>`;
+                }
             if (extSetting.ext006 == "YES") {
                 template += `cost: ${formatterNr.format(shipInfo[0].cg)} &#916;/day`;
             }
@@ -449,6 +456,7 @@ function checkResourceConsuming(shipData) {
         resources[x].insertBefore(createElementFromHTML(data, 'resourceTimer'), null);
     }
 }
+
 function monthlyRewards(shipData) {
     retrieveCvf(shipData);
 
