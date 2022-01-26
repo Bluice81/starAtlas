@@ -369,11 +369,10 @@ function processShip(shipData) {
             if (extSetting.ext005 == "YES") {
                 template += `earn: ${formatterNr.format(shipInfo[0].rgl)} &#916;/day<br>`;
             }
-            if( extSetting.ext005 == "YES" && 
-                extSetting.ext006 == "YES")
-                {
-                    template += `earn (net): ${formatterNr.format(shipInfo[0].rgl - shipInfo[0].cg)} &#916;/day<br>`;
-                }
+            if (extSetting.ext005 == "YES" &&
+                extSetting.ext006 == "YES") {
+                template += `earn (net): ${formatterNr.format(shipInfo[0].rgl - shipInfo[0].cg)} &#916;/day<br>`;
+            }
             if (extSetting.ext006 == "YES") {
                 template += `cost: ${formatterNr.format(shipInfo[0].cg)} &#916;/day`;
             }
