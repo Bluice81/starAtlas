@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "StarAtlas Tools",
-  "version": "3.2",
+  "version": "3.3",
   "description": "An unofficial extension of the \"Star Atlas\" game that enhances the gaming experience",
   "icons": {
     "48": "icons/logo.jpg"
@@ -15,6 +15,7 @@
         "https://play.staratlas.com/*"
       ],
       "js": [
+        "js/starEffect.js",
         "js/engine.js"
       ]
     }
