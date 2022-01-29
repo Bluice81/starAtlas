@@ -5,6 +5,7 @@ let getMarketDataApiRunning = false;
 let oldUpdateCoinPrice = new Date();
 let cvf = 0.0; //current value market usdc lower ask
 let cacheShipData;
+let versione = '3.5 30/01/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -120,7 +121,7 @@ function checkMenu() {
             <div id='wndAtlasTool' style='display: none; align-items: center; justify-content: center; top: 0; z-index: 1; position:absolute; width: 100%; height: 100%;'>
                 <div style='position: relative; padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
                     <div style='font-size: 10px; position:absolute; bottom: 10px; left: 10px; color: white; font-family: industryMedium; '>
-                        <a style='text-decoration: underline;' target="_blank" href='https://lnk.totemzetasoft.it/starAtlas/guida.html'>v. 3.3 27/01/2022</a>
+                        <a style='text-decoration: underline;' target="_blank" href='https://lnk.totemzetasoft.it/starAtlas/guida.html'>${versione}</a>
                     </div>     
                     <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>
                         <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
@@ -230,7 +231,15 @@ function checkMenu() {
     }
 
     if (location.href.includes('/market/')) {
-        initBuyResources();
+        var headerMarketType = document.querySelector(`span[class^="styles__DexHeaderTextWrapper-"]`);
+        if (headerMarketType &&
+            headerMarketType.innerText.toLocaleLowerCase().startsWith('resource ')) {
+            var tabs = document.querySelectorAll(`div[class^="styles__StyledTab-"]`);
+            if (tabs.length >= 3 && tabs[2].innerText.toLowerCase() == 'buy' &&
+                tabs[2].classList.contains('tabSelected')) {
+                initBuyResources();
+            }
+        }
 
         if (extSetting.ext009 == "YES") {
             //Fix open order visibility
@@ -288,6 +297,11 @@ function checkMenu() {
             obj.nr = parseInt(fleet[x].parentElement.parentElement.parentElement.querySelectorAll(`span[class^="ItemDetailDimensionstyles__ItemDetailDimensionValue-"]`)[1].innerText);
 
             fleetInStaking.push(obj);
+        }
+
+        //hourly resource calculation
+        if (cacheShipData) {
+            setHourBurn(cacheShipData);
         }
 
         //insert monthly rewards
@@ -422,10 +436,10 @@ function checkResourceConsuming(shipData) {
         });
 
         if (shipInfo.length == 1) {
-            totalFdH += fleetInStaking[x].nr * shipInfo[0].fd * 60 * 24;
-            totalFudH += fleetInStaking[x].nr * shipInfo[0].fud * 60 * 24;
-            totalAdH += fleetInStaking[x].nr * shipInfo[0].ad * 60 * 24;
-            totalRdH += fleetInStaking[x].nr * shipInfo[0].rd * 60 * 24;
+            totalFdH += fleetInStaking[x].nr * shipInfo[0].fdT;
+            totalFudH += fleetInStaking[x].nr * shipInfo[0].fudT;
+            totalAdH += fleetInStaking[x].nr * shipInfo[0].adT;
+            totalRdH += fleetInStaking[x].nr * shipInfo[0].rdT;
         }
     }
 
@@ -480,6 +494,61 @@ function monthlyRewards(shipData) {
         }
     }
 }
+function setHourBurn(shipData) {
+    var fleetCard = document.querySelectorAll(`div[class^="FleetDashboardItemstyles__DialogWrapper-"]`);
+    var capacity = 0;
+    var reseourceHour = 0;
+    var resourceHourRemain = 0;
+
+    for (var x = 0; x < fleetCard.length; x++) {
+        var fleetName = fleetCard[x].querySelector(`p[class^="FleetDashboardItemstyles__FleetName-"]`);
+
+        if (fleetName) {
+            var shipInfo = shipData.filter(function (el) {
+                return el.name == fleetName.innerText.toLocaleLowerCase();
+            });
+
+            var fleetInfo = fleetInStaking.filter(function (el) {
+                return el.name == fleetName.innerText.toLocaleLowerCase();
+            });
+
+            if (shipInfo.length == 1) {
+                var lbl = fleetCard[x].querySelectorAll(`label[class^="ProgressBarstyles__Label-"]`);
+
+                for (var y = 0; y < lbl.length; y += 2) {
+                    switch (lbl[y].innerText.split(' ')[0].toLocaleLowerCase()) {
+                        case "food":
+                            capacity = shipInfo[0].fT; //capacity
+                            reseourceHour = fleetInfo[0].nr * (shipInfo[0].fdT / 24); //hourly consumption
+                            break;
+                        case "fuel":
+                            capacity = shipInfo[0].fuT;
+                            reseourceHour = fleetInfo[0].nr * (shipInfo[0].fudT / 24);
+                            break;
+                        case "ammo":
+                            capacity = shipInfo[0].aT;
+                            reseourceHour = fleetInfo[0].nr * (shipInfo[0].adT / 24);
+                            break;
+                        case "health":
+                            capacity = shipInfo[0].rT;
+                            reseourceHour = fleetInfo[0].nr * (shipInfo[0].rdT / 24);
+                            break;
+                    }
+
+                    if (capacity > 0 && reseourceHour > 0) {
+                        resourceHourRemain = fleetInfo[0].nr * capacity * (parseFloat(lbl[y + 1].innerText.split('%')[0]) / 100);
+                        resourceHourRemain = parseInt(resourceHourRemain / reseourceHour);
+
+                        lbl[y].innerText = lbl[y].innerText.split(' ')[0] +
+                            ' (< ' + resourceHourRemain + ' hour' +
+                            (resourceHourRemain > 1 ? 's' : '') +
+                            (resourceHourRemain < 8 ? ' !!!' : '') + ')';
+                    }
+                }
+            }
+        }
+    }
+}
 function createElementFromHTML(htmlString, id) {
     var parsedHtml = parser.parseFromString(htmlString, 'text/html');
     return parsedHtml.getElementById(id);
@@ -499,6 +568,8 @@ function getMarketDataApi(type, callback) {
     getMarketDataApiRunning = true;
     callApi({ "action": "getMarketData", "type": type })
         .then(data => {
+            cacheShipData = data;
+
             callback(data);
             getMarketDataApiRunning = false;
         });
@@ -781,13 +852,8 @@ function initBuyResources() {
                 btnDown.style.pointerEvents = 'none';
             }
         }
-
-        getMarketDataApi(0, setCacheShipData);
     }
 
-}
-function setCacheShipData(shipData) {
-    cacheShipData = shipData;
 }
 function getQtaForDay(numDay) {
     var owned = document.querySelector(`span[class^="TechButtonstyles__TagText-"]`);
@@ -808,16 +874,16 @@ function getQtaForDay(numDay) {
         if (shipInfo.length == 1) {
             switch (document.getElementsByTagName('h1')[0].innerText.toLowerCase()) {
                 case "food":
-                    dayQta += fleetInStaking[x].nr * shipInfo[0].fd * 60 * 24;
+                    dayQta += fleetInStaking[x].nr * shipInfo[0].fdT;
                     break;
                 case "fuel":
-                    dayQta += fleetInStaking[x].nr * shipInfo[0].fud * 60 * 24;
+                    dayQta += fleetInStaking[x].nr * shipInfo[0].fudT;
                     break;
                 case "ammunition":
-                    dayQta += fleetInStaking[x].nr * shipInfo[0].ad * 60 * 24;
+                    dayQta += fleetInStaking[x].nr * shipInfo[0].adT;
                     break;
                 case "toolkit":
-                    dayQta += fleetInStaking[x].nr * shipInfo[0].rd * 60 * 24;
+                    dayQta += fleetInStaking[x].nr * shipInfo[0].rdT;
                     break;
             }
         }
