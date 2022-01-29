@@ -5,7 +5,7 @@ let getMarketDataApiRunning = false;
 let oldUpdateCoinPrice = new Date();
 let cvf = 0.0; //current value market usdc lower ask
 let cacheShipData;
-let versione = '3.5 30/01/2022';
+let versione = '3.5 29/01/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -238,6 +238,10 @@ function checkMenu() {
             if (tabs.length >= 3 && tabs[2].innerText.toLowerCase() == 'buy' &&
                 tabs[2].classList.contains('tabSelected')) {
                 initBuyResources();
+            } else {
+                if (document.getElementById('buyDay')) {
+                    document.getElementById('buyDay').style.display = 'none';
+                }
             }
         }
 
@@ -353,7 +357,9 @@ function checkMenu() {
 function processShip(shipData) {
     myLog('process data ship');
 
-    retrieveCvf(shipData);
+    setTimeout(function () {
+        retrieveCvf(shipData);
+    }, 1000);
 
     var elements = document.querySelectorAll('h3[class^="poster__PosterCountLarge-"]');
     for (var x = 0; x < elements.length; x++) {
@@ -768,6 +774,11 @@ function retrieveTnfDay(shipData) {
 }
 function initBuyResources() {
     var el = document.querySelector(`div[class^="NumberInputstyles__Wrapper-"]`);
+
+    if (document.getElementById('buyDay') &&
+        document.getElementById('buyDay').style.display == 'none') {
+        document.getElementById('buyDay').style.display = 'block';
+    }
 
     if (!document.getElementById('buyDay') && el && fleetInStaking.length > 0) {
         var template = `
