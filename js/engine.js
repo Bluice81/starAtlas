@@ -5,7 +5,7 @@ let getMarketDataApiRunning = false;
 let oldUpdateCoinPrice = new Date();
 let cvf = 0.0; //current value market usdc lower ask
 let cacheShipData;
-let versione = '3.5 29/01/2022';
+let versione = '3.8 30/01/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -308,6 +308,11 @@ function checkMenu() {
             setHourBurn(cacheShipData);
         }
 
+        //cvf
+        if (cacheShipData) {
+            retrieveCvf(cacheShipData);
+        }
+
         //insert monthly rewards
         if (!document.getElementById('monthlyRewards')) {
             var fleet = document.querySelectorAll(`p[class^="FleetDashboardItemstyles__FleetName-"]`);
@@ -474,8 +479,6 @@ function checkResourceConsuming(shipData) {
     }
 }
 function monthlyRewards(shipData) {
-    retrieveCvf(shipData);
-
     var data = '';
     var template = `
             <span id="monthlyRewards" style="margin-left: 30px" class="FleetRewardsTextstyles__FleetRewardsTextWrapper-hqStiK hiQUPk">
@@ -505,8 +508,10 @@ function setHourBurn(shipData) {
     var capacity = 0;
     var reseourceHour = 0;
     var resourceHourRemain = 0;
+    var needResupply = false;
 
     for (var x = 0; x < fleetCard.length; x++) {
+        needResupply = false;
         var fleetName = fleetCard[x].querySelector(`p[class^="FleetDashboardItemstyles__FleetName-"]`);
 
         if (fleetName) {
@@ -549,7 +554,22 @@ function setHourBurn(shipData) {
                             ' (< ' + resourceHourRemain + ' hour' +
                             (resourceHourRemain > 1 ? 's' : '') +
                             (resourceHourRemain < 8 ? ' !!!' : '') + ')';
+
+                        if (resourceHourRemain < 6) {
+                            needResupply = true;
+                        }
                     }
+                }
+
+                var btn = fleetCard[x].getElementsByTagName('button')[2];
+                if (needResupply) {
+                    btn.style.borderStyle = 'none';
+                    btn.style.background = 'red';
+                    btn.getElementsByTagName('span')[1].style.display = 'none';
+                } else {
+                    btn.style.borderStyle = '';
+                    btn.style.background = '';
+                    btn.getElementsByTagName('span')[1].style.display = '';
                 }
             }
         }
