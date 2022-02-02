@@ -2,10 +2,10 @@ let parser = new DOMParser();
 let fleetInStaking = [];
 let animateStar = false;
 let getMarketDataApiRunning = false;
-let oldUpdateCoinPrice = new Date();
+let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let cacheShipData;
-let versione = '3.8 30/01/2022';
+let versione = '4.0 02/02/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -36,12 +36,7 @@ document.onkeydown = function (event) {
         }
     }
     if (event.altKey && event.code == "KeyG") {
-        var el = document.getElementById('divChart');
-        if (el.style.display == 'none') {
-            el.style.display = 'block';
-        } else {
-            el.style.display = 'none';
-        }
+        window.open("https://lnk.totemzetasoft.it/starAtlas/roi.html");
     }
 };
 
@@ -77,8 +72,6 @@ setInterval(checkMenu, 500);
 
 function checkMenu() {
     initPriceCoin();
-
-    initChartWindow();
 
     //create extension menu if not exists
     if (!document.getElementById('mnuAtlasTool')) {
@@ -121,7 +114,7 @@ function checkMenu() {
             <div id='wndAtlasTool' style='display: none; align-items: center; justify-content: center; top: 0; z-index: 1; position:absolute; width: 100%; height: 100%;'>
                 <div style='position: relative; padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
                     <div style='font-size: 10px; position:absolute; bottom: 10px; left: 10px; color: white; font-family: industryMedium; '>
-                        <a style='text-decoration: underline;' target="_blank" href='https://lnk.totemzetasoft.it/starAtlas/guida.html'>${versione}</a>
+                        <a style='text-decoration: underline;' target="_blank" href='https://lnk.totemzetasoft.it/starAtlas/guida.html?v=4_0'>${versione}</a>
                     </div>     
                     <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>
                         <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
@@ -235,38 +228,13 @@ function checkMenu() {
         if (headerMarketType &&
             headerMarketType.innerText.toLocaleLowerCase().startsWith('resource ')) {
             var tabs = document.querySelectorAll(`div[class^="styles__StyledTab-"]`);
-            if (tabs.length >= 3 && tabs[2].innerText.toLowerCase() == 'buy' &&
+            if (tabs.length >= 3 && tabs[2].innerText.toLowerCase() == 'trade' &&
                 tabs[2].classList.contains('tabSelected')) {
                 initBuyResources();
             } else {
                 if (document.getElementById('buyDay')) {
                     document.getElementById('buyDay').style.display = 'none';
                 }
-            }
-        }
-
-        if (extSetting.ext009 == "YES") {
-            //Fix open order visibility
-            var el = document.querySelector(`div[class^="styles__ActionButtons-"]`);
-            if (el && el.style.margin == '20px') {
-                //myLog('fix open orders layout');
-                return;
-            }
-
-            if (el) {
-                el.style.margin = '20px';
-            }
-
-            el = document.querySelector(`div[class^="styles__OpenOrdersWrapper-"]`);
-            if (el) {
-                el.style.overflowy = 'scroll';
-                el.style.margin = '0';
-                el.style.height = '120px';
-            }
-
-            el = document.querySelector(`div[class^="styles__DexOpenOrdersWrapper-"]`);
-            if (el) {
-                el.style.height = 'max-content';
             }
         }
     }
@@ -481,8 +449,8 @@ function checkResourceConsuming(shipData) {
 function monthlyRewards(shipData) {
     var data = '';
     var template = `
-            <span id="monthlyRewards" style="margin-left: 30px" class="FleetRewardsTextstyles__FleetRewardsTextWrapper-hqStiK hiQUPk">
-                <span class="FleetRewardsTextstyles__FleetRewardsLabel-jconmC jTIwjt">Net Monthly Rewards</span>
+            <span id="monthlyRewards" style="margin-left: 30px" class="FleetRewardsTextstyles__FleetRewardsTextWrapper-hqStiK fCTZhu">
+                <span class="FleetRewardsTextstyles__FleetRewardsLabel-jconmC iKOHVX">Net Monthly Rewards</span>
                 <span class="FleetRewardsTextstyles__FleetRewardsValue-eIKJuX fXNYKC">??? ATLAS</span>
             </span>      
     `;
@@ -496,7 +464,7 @@ function monthlyRewards(shipData) {
         if (shipInfo.length == 1) {
             var numFleet = parseInt(fleet[x].parentElement.parentElement.parentElement.querySelectorAll(`span[class^="ItemDetailDimensionstyles__ItemDetailDimensionValue-"]`)[1].innerText);
             data = template.replace("???", formatterNr.format((shipInfo[0].rgl - shipInfo[0].cg) * 30 * numFleet));
-            var elements = fleet[x].closest("div").parentElement.parentElement.querySelectorAll(`div[class^="FleetDashboardItemstyles__FleetRewardsTextWrapper-"]`);
+            var elements = fleet[x].closest("div").parentElement.parentElement.parentElement.querySelectorAll(`div[class^="FleetDashboardItemstyles__FleetRewardsTextWrapper-"]`);
 
             elements[0].style.display = "flex";
             elements[0].insertBefore(createElementFromHTML(data, "monthlyRewards"), null);
@@ -551,7 +519,7 @@ function setHourBurn(shipData) {
                         resourceHourRemain = parseInt(resourceHourRemain / reseourceHour);
 
                         lbl[y].innerText = lbl[y].innerText.split(' ')[0] +
-                            ' (< ' + resourceHourRemain + ' hour' +
+                            ' (' + resourceHourRemain + ' hour' +
                             (resourceHourRemain > 1 ? 's' : '') +
                             (resourceHourRemain < 8 ? ' !!!' : '') + ')';
 
@@ -634,21 +602,21 @@ function initPriceCoin() {
                     <div style='text-transform: uppercase; font-size:24px; font-family: tungstenBook; flex: 0 1 auto; height: 30px; width: 100px; display: flex; justify-content: center'>
                         atlas
                     </div>
-                    <div id='priceAtlas' style='flex: 1 1 auto; height: 30px; background: url("https://lnk.totemzetasoft.it/starAtlas/api/price/star-atlas.png"); background-size:cover; background-repeat: no-repeat; margin-right: 10px'>
+                    <div id='priceAtlas' style='flex: 1 1 auto; height: 30px; margin-right: 10px'>
                     </div>
                 </div>	
                 <div style='display: flex; padding-top: 10px'>
                     <div style='text-transform: uppercase; font-size:24px; font-family: tungstenBook; flex: 0 1 auto; height: 30px; width: 100px; display: flex; justify-content: center'>
                         polis
                     </div>
-                    <div id='pricePolis' style='flex: 1 1 auto; height: 30px; background: url("https://lnk.totemzetasoft.it/starAtlas/api/price/star-atlas-polis.png"); background-size:cover; background-repeat: no-repeat; margin-right: 10px'>
+                    <div id='pricePolis' style='flex: 1 1 auto; height: 30px; margin-right: 10px'>
                     </div>
                 </div>	
                 <div style='display: flex; padding-top: 10px'>
                     <div style='text-transform: uppercase; font-size:24px; font-family: tungstenBook; flex: 0 1 auto; height: 30px; width: 100px; display: flex; justify-content: center'>
                         solana
                     </div>
-                    <div id='priceSolana' style='flex: 1 1 auto; height: 30px; background: url("https://lnk.totemzetasoft.it/starAtlas/api/price/solana.png"); background-size:cover; background-repeat: no-repeat; margin-right: 10px'>
+                    <div id='priceSolana' style='flex: 1 1 auto; height: 30px; margin-right: 10px'>
                     </div>
                 </div>			
             </div>
@@ -711,34 +679,35 @@ function initPriceCoin() {
         }
 
         makeDragable('#divPrice', '#divPrice');
-    } else if (document.getElementById('divPrice').style.display == 'block') {
+    }
+
+    if (document.getElementById('divPrice').style.display == 'block') {
         //update price
-        if ((new Date() - oldUpdateCoinPrice) / 1000 > 20) {
+        if (!oldUpdateCoinPrice || ((new Date() - oldUpdateCoinPrice) / 1000 > 20)) {
             myLog('update coin price');
 
-            var tmp = document.getElementById('priceAtlas').style.background;
-            document.getElementById('priceAtlas').style.background = tmp.split('.png')[0] + '.png?t=' + getTicks() + tmp.split('.png')[1];
+            var el = document.getElementById('priceAtlas');
+            el.style.background = `url("https://lnk.totemzetasoft.it/starAtlas/api/price/star-atlas.png?t=${getTicks()}")`;
+            el.style.backgroundRepeat = 'no-repeat';
+            el.style.backgroundSize = 'cover';
 
-            tmp = document.getElementById('pricePolis').style.background;
-            document.getElementById('pricePolis').style.background = tmp.split('.png')[0] + '.png?t=' + getTicks() + tmp.split('.png')[1];
+            el = document.getElementById('pricePolis');
+            el.style.background = `url("https://lnk.totemzetasoft.it/starAtlas/api/price/star-atlas-polis.png?t=${getTicks()}")`;
+            el.style.backgroundRepeat = 'no-repeat';
+            el.style.backgroundSize = 'cover';
 
-            tmp = document.getElementById('priceSolana').style.background;
-            document.getElementById('priceSolana').style.background = tmp.split('.png')[0] + '.png?t=' + getTicks() + tmp.split('.png')[1];
+            el = document.getElementById('priceSolana');
+            el.style.background = `url("https://lnk.totemzetasoft.it/starAtlas/api/price/solana.png?t=${getTicks()}")`;
+            el.style.backgroundRepeat = 'no-repeat';
+            el.style.backgroundSize = 'cover';
 
-            oldUpdateCoinPrice = new Date;
+            oldUpdateCoinPrice = new Date();
         }
     }
 }
 function getTicks() {
     var now = new Date();
     return now.getTime();
-}
-function initChartWindow() {
-    if (!document.getElementById('divChart')) {
-        var templateTest = `<iframe style='border:0; position:absolute; top:0; z-index: 1000; display:none; width:100%;height:100%' id='divChart' src="https://lnk.totemzetasoft.it/starAtlas/roi.html"></iframe>`;
-
-        document.body.appendChild(createElementFromHTML(templateTest, 'divChart'), null);
-    }
 }
 function retrieveCvf(shipData) {
     cvf = 0;
@@ -802,31 +771,37 @@ function initBuyResources() {
 
     if (!document.getElementById('buyDay') && el && fleetInStaking.length > 0) {
         var template = `
-    <div id='buyDay' style="margin-right: 15px;" class="NumberInputstyles__Wrapper-gnPFvn bExyxS NumberInputWrapper">
-        <label>For x day</label>
-        <span label="size" style="width: 101px" class="NumberInputstyles__InputWrapper-gLvgTt fSjyWd">
-            <input id='buyDayTxt' readonly='true' type="number" style="width: 101px" min="0" max="365" value="0">
-            <span class="NumberInputstyles__ButtonWrapper-eUHVOh liZuZM">
-                <button id='buyDayUp' class="NumberInputstyles__IncrementButton-gGByfb idyQxT">
+        <div id='buyDay' style="margin-right: 15px;" class="NumberInputstyles__Wrapper-gnPFvn bExyxS NumberInputWrapper">
+        <label>for x day</label>
+        <span label="size" style="width: 101px" class="NumberInputstyles__InputWrapper-gLvgTt bvZRga marketItemInput">
+            <input id='buyDayTxt' readonly='true' type="number" style="width: 101px;" min="0" max="365" value="0">
+            <span class="NumberInputstyles__ButtonWrapper-eUHVOh hlozAF">
+                <button id='buyDayUp' class="NumberInputstyles__IncrementButton-gGByfb guingM">
                     <span style="opacity: 1;" class="styles__SAIcon-ijmsNY fLpDJB">
                         <span>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="injected-svg sa-icon-svg" data-src="/icons/step-up-24.svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                                class="injected-svg sa-icon-svg" data-src="/icons/step-up-24.svg"
+                                xmlns:xlink="http://www.w3.org/1999/xlink">
                                 <g id="General/Step Up">
                                     <g id="Background-Stroke">
-                                        <path id="Line-183" d="M7 14L12 9L17 14" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <path id="Line-337" d="M7 14L12 9L17 14" stroke="white" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"></path>
                                     </g>
                                 </g>
                             </svg>
                         </span>
                     </span>
                 </button>
-                <button id='buyDayDown' disabled="" class="NumberInputstyles__IncrementButton-gGByfb idwzqS">
+                <button id='buyDayDown' disabled="" class="NumberInputstyles__IncrementButton-gGByfb gsJtHN">
                     <span style="opacity: 1;" class="styles__SAIcon-ijmsNY fLpDJB">
                         <span>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="injected-svg sa-icon-svg" data-src="/icons/step-down-24.svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                                class="injected-svg sa-icon-svg" data-src="/icons/step-down-24.svg"
+                                xmlns:xlink="http://www.w3.org/1999/xlink">
                                 <g id="General/Step Down">
                                     <g id="Background-Stroke">
-                                        <path id="Line-184" d="M17 10L12 15L7 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <path id="Line-338" d="M17 10L12 15L7 10" stroke="white" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"></path>
                                     </g>
                                 </g>
                             </svg>
@@ -887,7 +862,7 @@ function initBuyResources() {
 
 }
 function getQtaForDay(numDay) {
-    var owned = document.querySelector(`span[class^="TechButtonstyles__TagText-"]`);
+    var owned = document.querySelector(`span[class^="styles__NumberOwned-"]`);
     var ownedQta = 0.0;
     if (owned.innerText.includes('K')) {
         ownedQta = parseFloat(owned.innerText.split('K')[0]) * 1000;
