@@ -4,8 +4,9 @@ let animateStar = false;
 let getMarketDataApiRunning = false;
 let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
+let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '4.0 02/02/2022';
+let versione = '4.1 05/02/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -79,7 +80,7 @@ function checkMenu() {
         var navMenu = document.querySelectorAll(`div[class^="NavItemstyles__"]`);
 
         var template = `
-            <div id='mnuAtlasTool' style='left: 0px; bottom: -108px; position: absolute; width: 80px;'>
+            <div id='mnuAtlasTool' style='left: 0px; bottom: -133px; position: absolute; width: 80px;'>
                 <div style='display: flex; flex-flow: column'>
                     <div id='mnuSetting' style="width: 100%; background-position: center; background-size: 36px; height: 40px; cursor: pointer; background-image: url('data:image/png;base64,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'); background-repeat: no-repeat">
                     </div> 
@@ -87,6 +88,8 @@ function checkMenu() {
                     </div> 
                     <div id='divTnf' title='Net farm atlas for one day (click for refresh)' style='letter-spacing: 0.1em; cursor: pointer; user-select: none; margin: auto; font-size: 18px; padding-top: 5px'>
                     </div> 
+                    <div id='divTpr' title='Total pending rewards' style='letter-spacing: 0.1em; user-select: none; margin: auto; font-size: 18px; padding-top: 5px'>
+                    </div>                     
                 <div>
             </div>
         `;
@@ -114,7 +117,7 @@ function checkMenu() {
             <div id='wndAtlasTool' style='display: none; align-items: center; justify-content: center; top: 0; z-index: 1; position:absolute; width: 100%; height: 100%;'>
                 <div style='position: relative; padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
                     <div style='font-size: 10px; position:absolute; bottom: 10px; left: 10px; color: white; font-family: industryMedium; '>
-                        <a style='text-decoration: underline;' target="_blank" href='https://lnk.totemzetasoft.it/starAtlas/guida.html?v=4_0'>${versione}</a>
+                        <a style='text-decoration: underline;' target="_blank" href='https://lnk.totemzetasoft.it/starAtlas/guida.html?v=4_1'>${versione}</a>
                     </div>     
                     <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>
                         <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
@@ -262,13 +265,32 @@ function checkMenu() {
 
         //retrieve fleet in staking
         fleetInStaking.length = 0;
+        tpr = 0;
         var fleet = document.querySelectorAll(`p[class^="FleetDashboardItemstyles__FleetName-"]`);
         for (var x = 0; x < fleet.length; x++) {
             var obj = {};
             obj.name = fleet[x].innerText.toLowerCase();
             obj.nr = parseInt(fleet[x].parentElement.parentElement.parentElement.querySelectorAll(`span[class^="ItemDetailDimensionstyles__ItemDetailDimensionValue-"]`)[1].innerText);
 
+            var tmp = fleet[x].parentElement.parentElement.parentElement.parentElement.querySelectorAll(`span[class^="FleetRewardsTextstyles__FleetRewardsValue-"]`);
+            tpr += parseFloat(tmp[tmp.length - 1].innerText.split(' '));
+
             fleetInStaking.push(obj);
+        }
+
+        //Total pending rewards
+        var el = document.getElementById('divTpr');
+        if (el) {
+            if (extSetting.ext010 == "YES") {
+                el.innerText = 'xxx';
+            } else {
+                if (tpr == 0) {
+                    el.innerText = '';
+                } else {
+                    el.innerText = formatterNr.format(tpr);
+                }
+            }
+            el.style.color = 'white';
         }
 
         //hourly resource calculation
@@ -734,7 +756,7 @@ function retrieveCvf(shipData) {
         el.style.pointerEvents = 'all';
     }
 
-    retrieveTnfDay(shipData)
+    retrieveTnfDay(shipData);
 }
 function retrieveTnfDay(shipData) {
     //total net farm for one day
