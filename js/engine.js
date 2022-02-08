@@ -6,7 +6,7 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '4.1 05/02/2022';
+let versione = '4.2 08/02/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -795,8 +795,8 @@ function initBuyResources() {
         var template = `
         <div id='buyDay' style="margin-right: 15px;" class="NumberInputstyles__Wrapper-gnPFvn bExyxS NumberInputWrapper">
         <label>for x day</label>
-        <span label="size" style="width: 101px" class="NumberInputstyles__InputWrapper-gLvgTt bvZRga marketItemInput">
-            <input id='buyDayTxt' readonly='true' type="number" style="width: 101px;" min="0" max="365" value="0">
+        <span label="size" style="width: 101px" class="NumberInputstyles__InputWrapper-gLvgTt karCCD marketItemInput">
+        <input id='buyDayTxt' readonly='true' type="number" style="width: 101px;" min="0" max="365" value="0">
             <span class="NumberInputstyles__ButtonWrapper-eUHVOh hlozAF">
                 <button id='buyDayUp' class="NumberInputstyles__IncrementButton-gGByfb guingM">
                     <span style="opacity: 1;" class="styles__SAIcon-ijmsNY fLpDJB">
@@ -806,7 +806,7 @@ function initBuyResources() {
                                 xmlns:xlink="http://www.w3.org/1999/xlink">
                                 <g id="General/Step Up">
                                     <g id="Background-Stroke">
-                                        <path id="Line-337" d="M7 14L12 9L17 14" stroke="white" stroke-width="2"
+                                        <path id="Line-804" d="M7 14L12 9L17 14" stroke="white" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round"></path>
                                     </g>
                                 </g>
@@ -814,7 +814,7 @@ function initBuyResources() {
                         </span>
                     </span>
                 </button>
-                <button id='buyDayDown' disabled="" class="NumberInputstyles__IncrementButton-gGByfb gsJtHN">
+                <button id='buyDayDown' disabled="" class="NumberInputstyles__IncrementButton-gGByfb guingM">
                     <span style="opacity: 1;" class="styles__SAIcon-ijmsNY fLpDJB">
                         <span>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -822,7 +822,7 @@ function initBuyResources() {
                                 xmlns:xlink="http://www.w3.org/1999/xlink">
                                 <g id="General/Step Down">
                                     <g id="Background-Stroke">
-                                        <path id="Line-338" d="M17 10L12 15L7 10" stroke="white" stroke-width="2"
+                                        <path id="Line-805" d="M17 10L12 15L7 10" stroke="white" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round"></path>
                                     </g>
                                 </g>
@@ -884,7 +884,7 @@ function initBuyResources() {
 
 }
 function getQtaForDay(numDay) {
-    var owned = document.querySelector(`span[class^="styles__NumberOwned-"]`);
+    var owned = document.querySelector(`div[class^="styles__NumberOwned-"]`);
     var ownedQta = 0.0;
     if (owned.innerText.includes('K')) {
         ownedQta = parseFloat(owned.innerText.split('K')[0]) * 1000;
