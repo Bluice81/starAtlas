@@ -6,7 +6,7 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '4.2 08/02/2022';
+let versione = '4.3 08/02/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -796,7 +796,7 @@ function initBuyResources() {
         <div id='buyDay' style="margin-right: 15px;" class="NumberInputstyles__Wrapper-gnPFvn bExyxS NumberInputWrapper">
         <label>for x day</label>
         <span label="size" style="width: 101px" class="NumberInputstyles__InputWrapper-gLvgTt karCCD marketItemInput">
-        <input id='buyDayTxt' readonly='true' type="number" style="width: 101px;" min="0" max="365" value="0">
+        <input id='buyDayTxt' readonly='true' type="number" style="width: 121px;" min="0" max="365" value="0">
             <span class="NumberInputstyles__ButtonWrapper-eUHVOh hlozAF">
                 <button id='buyDayUp' class="NumberInputstyles__IncrementButton-gGByfb guingM">
                     <span style="opacity: 1;" class="styles__SAIcon-ijmsNY fLpDJB">
@@ -837,7 +837,18 @@ function initBuyResources() {
 
         el.parentElement.insertBefore(createElementFromHTML(template, "buyDay"), el.parentElement.firstChild);
 
+        //fix width price
+        var ex = document.querySelector(`span[class^="styles__PriceWrapper-"]`);
+        if (ex){
+            ex.style.width = '400px';
+        }
 
+        //fix width quantity
+        ex = document.querySelectorAll(`span[class^="NumberInputstyles__InputWrapper-"]`);
+        if (ex.length >= 1){
+            ex[1].style.width = '400px';
+            ex[1].childNodes[0].style.width = '100%';
+        }
         document.getElementById('buyDayUp').onclick = function () {
             var txt = document.getElementById('buyDayTxt');
             var newValue = 0;
