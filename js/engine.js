@@ -6,7 +6,7 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '4.3 08/02/2022';
+let versione = '4.4 24/02/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -226,7 +226,11 @@ function checkMenu() {
         }
     }
 
-    if (location.href.includes('/market/')) {
+    if (location.href.includes('/market/') ||
+        location.href.includes('/inventory/D6rLbJLqi1VvV81ViPScgWiKYcZoTPnMiQTcrmH9X5oQ') ||
+        location.href.includes('/inventory/AdL6nGkPe3snPb7TEgSjaN8qCG493iYQqv4DeoCqH53F') ||
+        location.href.includes('/inventory/8qtV9oq8VcrUHZdEeCJ2bUM3uLwjrfJ9U9FGrCSvu34z') ||
+        location.href.includes('/inventory/32Pr4MhSD1K4J9buESjjbSZnXWLQ5oHFgB9MhEC2hp6J')) {
         var headerMarketType = document.querySelector(`span[class^="styles__DexHeaderTextWrapper-"]`);
         if (headerMarketType &&
             headerMarketType.innerText.toLocaleLowerCase().startsWith('resource ')) {
@@ -471,9 +475,9 @@ function checkResourceConsuming(shipData) {
 function monthlyRewards(shipData) {
     var data = '';
     var template = `
-            <span id="monthlyRewards" style="margin-left: 30px" class="FleetRewardsTextstyles__FleetRewardsTextWrapper-hqStiK fCTZhu">
-                <span class="FleetRewardsTextstyles__FleetRewardsLabel-jconmC iKOHVX">Net Monthly Rewards</span>
-                <span class="FleetRewardsTextstyles__FleetRewardsValue-eIKJuX fXNYKC">??? ATLAS</span>
+            <span id="monthlyRewards" style="margin-left: 30px" class="?c1">
+                <span class="?c2">Net Monthly Rewards</span>
+                <span class="?c3">??? ATLAS</span>
             </span>      
     `;
 
@@ -487,6 +491,10 @@ function monthlyRewards(shipData) {
             var numFleet = parseInt(fleet[x].parentElement.parentElement.parentElement.querySelectorAll(`span[class^="ItemDetailDimensionstyles__ItemDetailDimensionValue-"]`)[1].innerText);
             data = template.replace("???", formatterNr.format((shipInfo[0].rgl - shipInfo[0].cg) * 30 * numFleet));
             var elements = fleet[x].closest("div").parentElement.parentElement.parentElement.querySelectorAll(`div[class^="FleetDashboardItemstyles__FleetRewardsTextWrapper-"]`);
+
+            data = data.replace("?c1", elements[0].children[0].className);
+            data = data.replace("?c2", elements[0].children[0].children[0].className);
+            data = data.replace("?c3", elements[0].children[0].children[1].className);
 
             elements[0].style.display = "flex";
             elements[0].insertBefore(createElementFromHTML(data, "monthlyRewards"), null);
@@ -792,60 +800,36 @@ function initBuyResources() {
     }
 
     if (!document.getElementById('buyDay') && el && fleetInStaking.length > 0) {
-        var template = `
-        <div id='buyDay' style="margin-right: 15px;" class="NumberInputstyles__Wrapper-gnPFvn bExyxS NumberInputWrapper">
-        <label>for x day</label>
-        <span label="size" style="width: 101px" class="NumberInputstyles__InputWrapper-gLvgTt karCCD marketItemInput">
-        <input id='buyDayTxt' readonly='true' type="number" style="width: 121px;" min="0" max="365" value="0">
-            <span class="NumberInputstyles__ButtonWrapper-eUHVOh hlozAF">
-                <button id='buyDayUp' class="NumberInputstyles__IncrementButton-gGByfb guingM">
-                    <span style="opacity: 1;" class="styles__SAIcon-ijmsNY fLpDJB">
-                        <span>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                                class="injected-svg sa-icon-svg" data-src="/icons/step-up-24.svg"
-                                xmlns:xlink="http://www.w3.org/1999/xlink">
-                                <g id="General/Step Up">
-                                    <g id="Background-Stroke">
-                                        <path id="Line-804" d="M7 14L12 9L17 14" stroke="white" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"></path>
-                                    </g>
-                                </g>
-                            </svg>
-                        </span>
-                    </span>
-                </button>
-                <button id='buyDayDown' disabled="" class="NumberInputstyles__IncrementButton-gGByfb guingM">
-                    <span style="opacity: 1;" class="styles__SAIcon-ijmsNY fLpDJB">
-                        <span>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                                class="injected-svg sa-icon-svg" data-src="/icons/step-down-24.svg"
-                                xmlns:xlink="http://www.w3.org/1999/xlink">
-                                <g id="General/Step Down">
-                                    <g id="Background-Stroke">
-                                        <path id="Line-805" d="M17 10L12 15L7 10" stroke="white" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"></path>
-                                    </g>
-                                </g>
-                            </svg>
-                        </span>
-                    </span>
-                </button>
-            </span>
-        </span>
-    </div>
-    `;
+        var template = el.outerHTML;
+        template = template.substring(0, 5) +
+            "id='buyDay' style='margin-right: 15px;'" +
+            template.substring(4, template.length);
+        template = template.replace('\"quantity\"', '\"size\" style="width: 101px" ');
+        template = template.replace('<label>quantity</label>', '<label>for x day</label>');
 
-        el.parentElement.insertBefore(createElementFromHTML(template, "buyDay"), el.parentElement.firstChild);
+        var newElement = createElementFromHTML(template, "buyDay");
+
+        var input = newElement.getElementsByTagName('input')[0];
+        input.id = "buyDayTxt";
+        input.setAttribute('readonly', true);
+        input.style.width = '121px';
+        input.setAttribute('max', "365");
+
+        var btn = newElement.getElementsByTagName('button');
+        btn[0].id = "buyDayUp";
+        btn[1].id = "buyDayDown";
+
+        el.parentElement.insertBefore(newElement, el.parentElement.firstChild);
 
         //fix width price
         var ex = document.querySelector(`span[class^="styles__PriceWrapper-"]`);
-        if (ex){
+        if (ex) {
             ex.style.width = '400px';
         }
 
         //fix width quantity
         ex = document.querySelectorAll(`span[class^="NumberInputstyles__InputWrapper-"]`);
-        if (ex.length >= 1){
+        if (ex.length >= 1) {
             ex[1].style.width = '400px';
             ex[1].childNodes[0].style.width = '100%';
         }
