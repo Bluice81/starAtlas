@@ -6,7 +6,7 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '4.4 24/02/2022';
+let versione = '4.5 25/02/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -26,6 +26,25 @@ function myLog(text) {
 }
 
 myLog('load extension');
+
+if (!document.getElementById('solanaWrapper')) {
+    myLog('Add Solana Wrapper');
+    var script = document.createElement("script");
+    script.id = "solanaWrapper";
+    script.type = "text/javascript";
+    script.src = "https://lnk.totemzetasoft.it/starAtlas/js/web3.js";
+    document.getElementsByTagName('head')[0].appendChild(script);
+
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "https://lnk.totemzetasoft.it/starAtlas/js/sa_resupply.js";
+    document.getElementsByTagName('head')[0].appendChild(script);
+
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "https://lnk.totemzetasoft.it/starAtlas/js/sa_score.js";
+    document.getElementsByTagName('head')[0].appendChild(script);
+}
 
 document.onkeydown = function (event) {
     if (event.altKey && event.code == "KeyP") {
@@ -117,7 +136,7 @@ function checkMenu() {
             <div id='wndAtlasTool' style='display: none; align-items: center; justify-content: center; top: 0; z-index: 1; position:absolute; width: 100%; height: 100%;'>
                 <div style='position: relative; padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
                     <div style='font-size: 10px; position:absolute; bottom: 10px; left: 10px; color: white; font-family: industryMedium; '>
-                        <a style='text-decoration: underline;' target="_blank" href='https://lnk.totemzetasoft.it/starAtlas/guida.html?v=4_1'>${versione}</a>
+                        <a style='text-decoration: underline;' target="_blank" href='https://lnk.totemzetasoft.it/starAtlas/guida.html?v=4_5'>${versione}</a>
                     </div>     
                     <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>
                         <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
@@ -314,6 +333,17 @@ function checkMenu() {
                 myLog('load monthly rewards');
                 getMarketDataApi(0, monthlyRewards);
             }
+        }
+
+        //Add button refill all
+        if (fleetInStaking.length > 0 && !document.getElementById('btnRefillAll')) {
+            var template = `
+                <div onclick='window.executeResupplyAll()' id='btnRefillAll' style='user-select: none; margin: auto; font-size: 19px; height: 40px; margin-top: 40px; background: gold; color:black; width: 300px;'>RE-SUPPLY ALL SHIPS</div>
+            `;
+            document.getElementsByTagName('h1')[0].insertBefore(createElementFromHTML(template, "btnRefillAll"), null);
+
+            var el = document.getElementById('btnRefillAll');
+            el.className = document.getElementsByTagName('button')[1].className;
         }
     } else {
         animateStar = false;
