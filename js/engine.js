@@ -6,7 +6,7 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '4.5 25/02/2022';
+let versione = '4.7 28/02/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -26,25 +26,6 @@ function myLog(text) {
 }
 
 myLog('load extension');
-
-if (!document.getElementById('solanaWrapper')) {
-    myLog('Add Solana Wrapper');
-    var script = document.createElement("script");
-    script.id = "solanaWrapper";
-    script.type = "text/javascript";
-    script.src = "https://lnk.totemzetasoft.it/starAtlas/js/web3.js";
-    document.getElementsByTagName('head')[0].appendChild(script);
-
-    var script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = "https://lnk.totemzetasoft.it/starAtlas/js/sa_resupply.js";
-    document.getElementsByTagName('head')[0].appendChild(script);
-
-    var script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = "https://lnk.totemzetasoft.it/starAtlas/js/sa_score.js";
-    document.getElementsByTagName('head')[0].appendChild(script);
-}
 
 document.onkeydown = function (event) {
     if (event.altKey && event.code == "KeyP") {
@@ -334,17 +315,6 @@ function checkMenu() {
                 getMarketDataApi(0, monthlyRewards);
             }
         }
-
-        //Add button refill all
-        if (fleetInStaking.length > 0 && !document.getElementById('btnRefillAll')) {
-            var template = `
-                <div onclick='window.executeResupplyAll()' id='btnRefillAll' style='user-select: none; margin: auto; font-size: 19px; height: 40px; margin-top: 40px; background: gold; color:black; width: 300px;'>RE-SUPPLY ALL SHIPS</div>
-            `;
-            document.getElementsByTagName('h1')[0].insertBefore(createElementFromHTML(template, "btnRefillAll"), null);
-
-            var el = document.getElementById('btnRefillAll');
-            el.className = document.getElementsByTagName('button')[1].className;
-        }
     } else {
         animateStar = false;
     }
@@ -382,6 +352,9 @@ function checkMenu() {
             el.nextElementSibling.style.overflowY = "auto";
         }
     }
+}
+function btnResupplyAll_click(){
+    executeResupplyAll();    
 }
 function processShip(shipData) {
     myLog('process data ship');
