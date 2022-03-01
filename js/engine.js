@@ -6,7 +6,7 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '4.7 28/02/2022';
+let versione = '4.8 01/03/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -18,7 +18,8 @@ let extSetting = {
     ext007: "YES",
     ext008: "YES",
     ext009: "YES",
-    ext010: "YES"
+    ext010: "YES",
+    ext011: "YES"
 }
 
 function myLog(text) {
@@ -56,6 +57,9 @@ if (localStorage.extSetting) {
     }
     if (!extSetting.ext010) {
         extSetting.ext010 = "YES";
+    }
+    if (!extSetting.ext011) {
+        extSetting.ext011 = "YES";
     }
 }
 
@@ -117,7 +121,7 @@ function checkMenu() {
             <div id='wndAtlasTool' style='display: none; align-items: center; justify-content: center; top: 0; z-index: 1; position:absolute; width: 100%; height: 100%;'>
                 <div style='position: relative; padding: 10px; border-radius: 10px; box-shadow: 0px 0px 40px 5px #000; width: 400px; height: 500px; background: #1e1d25'>
                     <div style='font-size: 10px; position:absolute; bottom: 10px; left: 10px; color: white; font-family: industryMedium; '>
-                        <a style='text-decoration: underline;' target="_blank" href='https://lnk.totemzetasoft.it/starAtlas/guida.html?v=4_5'>${versione}</a>
+                        <a style='text-decoration: underline;' target="_blank" href='https://lnk.totemzetasoft.it/starAtlas/guida.html?v=4_8'>${versione}</a>
                     </div>     
                     <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>
                         <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
@@ -181,7 +185,15 @@ function checkMenu() {
                             <div id="ext007" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext007 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
                                 ${extSetting.ext007}
                             </div>                        
-                        </div>    
+                        </div>   
+                        <div style='display:flex; height: 45px; font-family: industryMedium; '>
+                            <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
+                                Show gif effect on faction fleet
+                            </div>
+                            <div id="ext011" class='optionExt' style='cursor:pointer; display: flex; justify-content:center; align-items: center; color: ${extSetting.ext011 == "YES" ? "orange" : "gray"}; display: flex; flex: 1 1 auto'>
+                                ${extSetting.ext011}
+                            </div>                        
+                        </div>                              
                         <div style='display:flex; height: 45px; font-family: industryMedium; '>
                             <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
                                 Show resource countdown 
@@ -315,6 +327,11 @@ function checkMenu() {
                 getMarketDataApi(0, monthlyRewards);
             }
         }
+
+        //insert gif
+        if (extSetting.ext011 == "YES" && cacheShipData) {
+            gifShip(cacheShipData);
+        }
     } else {
         animateStar = false;
     }
@@ -353,8 +370,8 @@ function checkMenu() {
         }
     }
 }
-function btnResupplyAll_click(){
-    executeResupplyAll();    
+function btnResupplyAll_click() {
+    executeResupplyAll();
 }
 function processShip(shipData) {
     myLog('process data ship');
@@ -923,4 +940,24 @@ function getQtaForDay(numDay) {
 
     var ev2 = new Event('input', { bubbles: true });
     el.dispatchEvent(ev2);
+}
+function gifShip(shipData) {
+    var tabFleet = document.querySelectorAll(`div[class^="FleetDashboardItemstyles__Dialog-"]`);
+    var img;
+    for (var x = 0; x < tabFleet.length; x++) {
+        var shipInfo = shipData.filter(function (el) {
+            return el.name == tabFleet[x].querySelector(`p[class^="FleetDashboardItemstyles__FleetName-"]`).innerText.toLowerCase();
+        });
+
+        if (shipInfo.length == 1 && shipInfo[0].gif !== '') {
+            img = tabFleet[x].querySelector(`span[class^="FleetDashboardItemstyles__ImageWrapper-"]`);
+            if (img) {
+                img = img.getElementsByTagName('img');
+                if (img.length == 1 && !img[0].src.includes('totemzetasoft')) {
+                    img[0].setAttribute('srcset', '');
+                    img[0].setAttribute('src', `https://lnk.totemzetasoft.it/starAtlas/res/${shipInfo[0].gif}.gif?t=${getTicks()}`);
+                }
+            }
+        }
+    }
 }
