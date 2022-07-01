@@ -6,7 +6,7 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '4.8 01/03/2022';
+let versione = '5 01/07/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -370,9 +370,6 @@ function checkMenu() {
         }
     }
 }
-function btnResupplyAll_click() {
-    executeResupplyAll();
-}
 function processShip(shipData) {
     myLog('process data ship');
 
@@ -469,18 +466,18 @@ function checkResourceConsuming(shipData) {
     }
 
     for (var x = 0; x < resources.length; x++) {
-        switch (resources[x].innerText.toLocaleLowerCase()) {
+        switch (resources[x].innerText.split('\n')[0].toLocaleLowerCase()) {
             case "fuel":
-                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.split(" ")[0]) / totalFudH;
+                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.replace(".", "").split(" ")[0]) / totalFudH;
                 break;
             case "food":
-                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.split(" ")[0]) / totalFdH;
+                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.replace(".", "").split(" ")[0]) / totalFdH;
                 break;
             case "ammunition":
-                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.split(" ")[0]) / totalAdH;
+                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.replace(".", "").split(" ")[0]) / totalAdH;
                 break;
             case "toolkit":
-                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.split(" ")[0]) / totalRdH;
+                vValue = parseFloat(resources[x].closest('div').querySelector(`p[class^="generic__StatValue-"]`).innerText.replace(".", "").split(" ")[0]) / totalRdH;
                 break;
         }
 
@@ -821,11 +818,11 @@ function initBuyResources() {
 
     if (!document.getElementById('buyDay') && el && fleetInStaking.length > 0) {
         var template = el.outerHTML;
-        template = template.substring(0, 5) +
-            "id='buyDay' style='margin-right: 15px;'" +
-            template.substring(4, template.length);
-        template = template.replace('\"quantity\"', '\"size\" style="width: 101px" ');
-        template = template.replace('<label>quantity</label>', '<label>for x day</label>');
+            template = template.substring(0, 5) +
+                "id='buyDay' style='margin-right: 15px;'" +
+                template.substring(4, template.length);
+            template = template.replace('\"quantity\"', '\"size\" style="width: 101px" ');
+            template = template.replace('<label>quantity</label>', '<label>for x day</label>');
 
         var newElement = createElementFromHTML(template, "buyDay");
 
@@ -934,7 +931,7 @@ function getQtaForDay(numDay) {
 
     var request = dayQta * parseInt(numDay) - ownedQta;
 
-    var el = document.getElementsByTagName('input')[1];
+    var el = document.getElementsByTagName('input')[2];
     var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
     nativeInputValueSetter.call(el, (request < 0 ? 0 : request).toFixed(0));
 
