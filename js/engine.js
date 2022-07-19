@@ -6,7 +6,7 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '5 01/07/2022';
+let versione = '5.1 19/07/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -818,11 +818,11 @@ function initBuyResources() {
 
     if (!document.getElementById('buyDay') && el && fleetInStaking.length > 0) {
         var template = el.outerHTML;
-            template = template.substring(0, 5) +
-                "id='buyDay' style='margin-right: 15px;'" +
-                template.substring(4, template.length);
-            template = template.replace('\"quantity\"', '\"size\" style="width: 101px" ');
-            template = template.replace('<label>quantity</label>', '<label>for x day</label>');
+        template = template.substring(0, 5) +
+            "id='buyDay' style='margin-right: 15px;'" +
+            template.substring(4, template.length);
+        template = template.replace('\"quantity\"', '\"size\" style="width: 101px" ');
+        template = template.replace('<label>quantity</label>', '<label>for x day</label>');
 
         var newElement = createElementFromHTML(template, "buyDay");
 
@@ -931,12 +931,22 @@ function getQtaForDay(numDay) {
 
     var request = dayQta * parseInt(numDay) - ownedQta;
 
-    var el = document.getElementsByTagName('input')[2];
-    var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-    nativeInputValueSetter.call(el, (request < 0 ? 0 : request).toFixed(0));
+    //retrieve field quantity and set value
+    var elInput = document.getElementsByTagName('input');
+    for (var x = 0; x < elInput.length; x++) {
+        if (elInput[x].parentElement.getAttribute('label') && elInput[x].parentElement.getAttribute('label') == 'quantity') {
+            el = elInput[x];
+            break;
+        }
+    }
+    if (el) {
+        var el = document.getElementsByTagName('input')[2];
+        var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+        nativeInputValueSetter.call(el, (request < 0 ? 0 : request).toFixed(0));
 
-    var ev2 = new Event('input', { bubbles: true });
-    el.dispatchEvent(ev2);
+        var ev2 = new Event('input', { bubbles: true });
+        el.dispatchEvent(ev2);
+    }
 }
 function gifShip(shipData) {
     var tabFleet = document.querySelectorAll(`div[class^="FleetDashboardItemstyles__Dialog-"]`);
