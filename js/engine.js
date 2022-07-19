@@ -6,7 +6,7 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '5.1 19/07/2022';
+let versione = '5.2 19/07/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -940,7 +940,6 @@ function getQtaForDay(numDay) {
         }
     }
     if (el) {
-        var el = document.getElementsByTagName('input')[2];
         var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
         nativeInputValueSetter.call(el, (request < 0 ? 0 : request).toFixed(0));
 
