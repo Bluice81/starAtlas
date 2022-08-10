@@ -1,12 +1,12 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3 ,
   "name": "StarAtlas Tools",
-  "version": "5.2",
+  "version": "6.0",
   "description": "An unofficial extension of the \"Star Atlas\" game that enhances the gaming experience",
   "icons": {
     "48": "icons/logo.jpg"
   },
-  "permissions": [
+  "host_permissions": [
     "https://lnk.totemzetasoft.it/starAtlas/api/services.php"
   ],
   "content_scripts": [

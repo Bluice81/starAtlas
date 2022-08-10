@@ -6,7 +6,7 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '5.2 19/07/2022';
+let versione = '6.0 10/08/2022';
 
 let extSetting = {
     ext001: "YES",
@@ -18,7 +18,7 @@ let extSetting = {
     ext007: "YES",
     ext008: "YES",
     ext009: "YES",
-    ext010: "YES",
+    ext010: "NO",
     ext011: "YES"
 }
 
@@ -70,7 +70,8 @@ var formatterUSD = new Intl.NumberFormat('en-US', {
 });
 
 var formatterNr = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 2
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
 });
 
 setInterval(checkMenu, 500);
@@ -84,15 +85,15 @@ function checkMenu() {
         var navMenu = document.querySelectorAll(`div[class^="NavItemstyles__"]`);
 
         var template = `
-            <div id='mnuAtlasTool' style='left: 0px; bottom: -133px; position: absolute; width: 80px;'>
+            <div id='mnuAtlasTool' style='left: 0px; bottom: 0px; position: absolute; width: 80px;z-index:1000'>
                 <div style='display: flex; flex-flow: column'>
                     <div id='mnuSetting' style="width: 100%; background-position: center; background-size: 36px; height: 40px; cursor: pointer; background-image: url('data:image/png;base64,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'); background-repeat: no-repeat">
                     </div> 
-                    <div id='divCvf' title='Current value of fleet (click for refresh)' style='letter-spacing: 0.1em; cursor: pointer; user-select: none; margin: auto; font-size: 18px; padding-top: 5px'>
+                    <div id='divCvf' title='Current value of fleet (click for refresh)' style='letter-spacing: 0.1em; cursor: pointer; user-select: none; margin: auto; font-size: 13px; padding-top: 5px'>
                     </div> 
-                    <div id='divTnf' title='Net farm atlas for one day (click for refresh)' style='letter-spacing: 0.1em; cursor: pointer; user-select: none; margin: auto; font-size: 18px; padding-top: 5px'>
+                    <div id='divTnf' title='Net farm atlas for one day (click for refresh)' style='letter-spacing: 0.1em; cursor: pointer; user-select: none; margin: auto; font-size: 13px; padding-top: 5px'>
                     </div> 
-                    <div id='divTpr' title='Total pending rewards' style='letter-spacing: 0.1em; user-select: none; margin: auto; font-size: 18px; padding-top: 5px'>
+                    <div id='divTpr' title='Total pending rewards' style='letter-spacing: 0.1em; user-select: none; margin: auto; font-size: 13px; padding-top: 5px; padding-bottom: 10px'>
                     </div>                     
                 <div>
             </div>
@@ -238,21 +239,18 @@ function checkMenu() {
         }
     }
 
-    if (location.href.includes('/market/') ||
-        location.href.includes('/inventory/D6rLbJLqi1VvV81ViPScgWiKYcZoTPnMiQTcrmH9X5oQ') ||
-        location.href.includes('/inventory/AdL6nGkPe3snPb7TEgSjaN8qCG493iYQqv4DeoCqH53F') ||
-        location.href.includes('/inventory/8qtV9oq8VcrUHZdEeCJ2bUM3uLwjrfJ9U9FGrCSvu34z') ||
-        location.href.includes('/inventory/32Pr4MhSD1K4J9buESjjbSZnXWLQ5oHFgB9MhEC2hp6J')) {
-        var headerMarketType = document.querySelector(`span[class^="styles__DexHeaderTextWrapper-"]`);
-        if (headerMarketType &&
-            headerMarketType.innerText.toLocaleLowerCase().startsWith('resource ')) {
-            var tabs = document.querySelectorAll(`div[class^="styles__StyledTab-"]`);
-            if (tabs.length >= 3 && tabs[2].innerText.toLowerCase() == 'trade' &&
-                tabs[2].classList.contains('tabSelected')) {
-                initBuyResources();
-            } else {
-                if (document.getElementById('buyDay')) {
-                    document.getElementById('buyDay').style.display = 'none';
+    if (location.href.endsWith('market/ammunition') ||
+        location.href.includes('market/fuel') ||
+        location.href.includes('market/toolkit') ||
+        location.href.includes('market/food')) {
+        var container = document.querySelector(`table[class^="styles__StyledTable-"]`);
+        if (container) {
+            var tr = container.getElementsByTagName('tr');
+            for (var x = 0; x < tr.length; x++) {
+                tr[x].onclick = function () {
+                    setTimeout(function () {
+                        initBuyResources();
+                    }, 500);
                 }
             }
         }
@@ -338,8 +336,6 @@ function checkMenu() {
 
     if (location.href.includes('/inventory') &&
         document.getElementsByClassName('tabSelected ')[0].innerText.toLowerCase() == 'resources') {
-
-        // console.log('im in inventory');
 
         if (extSetting.ext008 == 'YES') {
             if (!document.getElementById('resourceTimer')) {
@@ -576,15 +572,19 @@ function setHourBurn(shipData) {
                     }
                 }
 
-                var btn = fleetCard[x].getElementsByTagName('button')[2];
-                if (needResupply) {
-                    btn.style.borderStyle = 'none';
-                    btn.style.background = 'red';
-                    btn.getElementsByTagName('span')[1].style.display = 'none';
-                } else {
-                    btn.style.borderStyle = '';
-                    btn.style.background = '';
-                    btn.getElementsByTagName('span')[1].style.display = '';
+                var btn = fleetCard[x].getElementsByTagName('button');
+                if (btn.length > 2) {
+                    btn = btn[2];
+
+                    if (needResupply) {
+                        btn.style.borderStyle = 'none';
+                        btn.style.background = 'red';
+                        btn.getElementsByTagName('span')[1].style.display = 'none';
+                    } else {
+                        btn.style.borderStyle = '';
+                        btn.style.background = '';
+                        btn.getElementsByTagName('span')[1].style.display = '';
+                    }
                 }
             }
         }
@@ -809,49 +809,32 @@ function retrieveTnfDay(shipData) {
     }
 }
 function initBuyResources() {
-    var el = document.querySelector(`div[class^="NumberInputstyles__Wrapper-"]`);
+    myLog('Init For X Day');
 
-    if (document.getElementById('buyDay') &&
-        document.getElementById('buyDay').style.display == 'none') {
-        document.getElementById('buyDay').style.display = 'block';
-    }
-
-    if (!document.getElementById('buyDay') && el && fleetInStaking.length > 0) {
+    var el = document.querySelectorAll(`span[class^="ItemOrdersModalDataRowstyles__ModalDataRowWrapper-"]`);
+    if (el.length >= 1) {
+        if (fleetInStaking.length == 0) {
+            alert('The tool "For x day" is available after loading page "Faction Fleet"');
+            return;
+        }
+        el = el[1];
         var template = el.outerHTML;
-        template = template.substring(0, 5) +
-            "id='buyDay' style='margin-right: 15px;'" +
-            template.substring(4, template.length);
-        template = template.replace('\"quantity\"', '\"size\" style="width: 101px" ');
-        template = template.replace('<label>quantity</label>', '<label>for x day</label>');
+        template = template.substring(0, 6) +
+            "id='buyDay'" +
+            template.substring(5, template.length);
+        template = template.replace('Quantity to BUY', 'For x day');
+        template = template.replace('margin-top: 6px;', 'visibility: hidden');
+        template = template.replace('min="1"', 'min="1" readonly="true" ids="buyDayTxt"');
+        template = template.replace('1964579179232', '365');
+        template = template.replace('General/Step Up', 'buyDayUp');
+        template = template.replace('General/Step Down', 'buyDayDown');
 
         var newElement = createElementFromHTML(template, "buyDay");
 
-        var input = newElement.getElementsByTagName('input')[0];
-        input.id = "buyDayTxt";
-        input.setAttribute('readonly', true);
-        input.style.width = '121px';
-        input.setAttribute('max', "365");
+        el.parentElement.insertBefore(newElement, el);
 
-        var btn = newElement.getElementsByTagName('button');
-        btn[0].id = "buyDayUp";
-        btn[1].id = "buyDayDown";
-
-        el.parentElement.insertBefore(newElement, el.parentElement.firstChild);
-
-        //fix width price
-        var ex = document.querySelector(`span[class^="styles__PriceWrapper-"]`);
-        if (ex) {
-            ex.style.width = '400px';
-        }
-
-        //fix width quantity
-        ex = document.querySelectorAll(`span[class^="NumberInputstyles__InputWrapper-"]`);
-        if (ex.length >= 1) {
-            ex[1].style.width = '400px';
-            ex[1].childNodes[0].style.width = '100%';
-        }
-        document.getElementById('buyDayUp').onclick = function () {
-            var txt = document.getElementById('buyDayTxt');
+        document.getElementById('buyDayUp').closest('button').onclick = function () {
+            var txt = document.querySelector(`input[ids="buyDayTxt"]`);
             var newValue = 0;
 
             if (!isNaN(txt.value)) {
@@ -862,7 +845,7 @@ function initBuyResources() {
 
             if (newValue <= 365) {
                 txt.value = newValue;
-                var btnDown = document.getElementById('buyDayDown');
+                var btnDown = document.getElementById('buyDayDown').closest('button');
                 btnDown.removeAttribute('disabled');
                 btnDown.style.pointerEvents = 'all';
 
@@ -870,8 +853,8 @@ function initBuyResources() {
             }
         }
 
-        document.getElementById('buyDayDown').onclick = function () {
-            var txt = document.getElementById('buyDayTxt');
+        document.getElementById('buyDayDown').closest('button').onclick = function () {
+            var txt = document.querySelector(`input[ids="buyDayTxt"]`);
             var newValue = 0;
 
             if (!isNaN(txt.value)) {
@@ -887,22 +870,16 @@ function initBuyResources() {
             }
 
             if (newValue == 0) {
-                var btnDown = document.getElementById('buyDayDown');
+                var btnDown = document.getElementById('buyDayDown').closest('button');
                 btnDown.setAttribute('disabled', '');
                 btnDown.style.pointerEvents = 'none';
             }
         }
     }
-
 }
 function getQtaForDay(numDay) {
-    var owned = document.querySelector(`div[class^="styles__NumberOwned-"]`);
-    var ownedQta = 0.0;
-    if (owned.innerText.includes('K')) {
-        ownedQta = parseFloat(owned.innerText.split('K')[0]) * 1000;
-    } else if (!isNaN(ownedQta.innerText)) {
-        ownedQta = parseInt(owned.innerText);
-    }
+    var owned = document.querySelectorAll(`p[class^="ItemOrdersModalstyles__ItemOrdersModalInfoText-"]`)[1];
+    var ownedQta = parseFloat(owned.innerText.split(' ')[0].replace('.', ''));
 
     var dayQta = 0.0;
 
@@ -912,7 +889,7 @@ function getQtaForDay(numDay) {
         });
 
         if (shipInfo.length == 1) {
-            switch (document.getElementsByTagName('h1')[0].innerText.toLowerCase()) {
+            switch (location.href.split("/").slice(-1)[0]) {
                 case "food":
                     dayQta += fleetInStaking[x].nr * shipInfo[0].fdT;
                     break;
@@ -932,20 +909,12 @@ function getQtaForDay(numDay) {
     var request = dayQta * parseInt(numDay) - ownedQta;
 
     //retrieve field quantity and set value
-    var elInput = document.getElementsByTagName('input');
-    for (var x = 0; x < elInput.length; x++) {
-        if (elInput[x].parentElement.getAttribute('label') && elInput[x].parentElement.getAttribute('label') == 'quantity') {
-            el = elInput[x];
-            break;
-        }
-    }
-    if (el) {
-        var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-        nativeInputValueSetter.call(el, (request < 0 ? 0 : request).toFixed(0));
+    var el = document.querySelectorAll(`input[min="1"]`)[1];
+    var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+    nativeInputValueSetter.call(el, (request < 0 ? 0 : request).toFixed(0));
 
-        var ev2 = new Event('input', { bubbles: true });
-        el.dispatchEvent(ev2);
-    }
+    var ev2 = new Event('input', { bubbles: true });
+    el.dispatchEvent(ev2);
 }
 function gifShip(shipData) {
     var tabFleet = document.querySelectorAll(`div[class^="FleetDashboardItemstyles__Dialog-"]`);
