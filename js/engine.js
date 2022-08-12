@@ -6,7 +6,8 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '6.0 10/08/2022';
+let versione = '6.1 12/08/2022';
+let oldMarketName = '';
 
 let extSetting = {
     ext001: "YES",
@@ -56,7 +57,7 @@ if (localStorage.extSetting) {
         extSetting.ext009 = "YES";
     }
     if (!extSetting.ext010) {
-        extSetting.ext010 = "YES";
+        extSetting.ext010 = "NO";
     }
     if (!extSetting.ext011) {
         extSetting.ext011 = "YES";
@@ -261,6 +262,15 @@ function checkMenu() {
 
         if (!document.getElementById('x001')) {
             getMarketDataApi(0, processShip);
+        }
+    }
+
+    if (location.href.includes('/market/') && document.querySelector(`section[class^="ItemOrdersTablestyles__ItemOrdersTableScrollableWrapper-"]`)) {
+        var marketName = location.href.split("/").slice(-1)[0];
+        if (oldMarketName !== marketName) {
+            oldMarketName = marketName;
+
+            showWalletAddress();
         }
     }
 
@@ -935,4 +945,80 @@ function gifShip(shipData) {
             }
         }
     }
+}
+function showWalletAddress() {
+    myLog('Load wallet address');
+
+    getNftApi()
+        .then(data => {
+            var shipMint = data.filter(function (el) {
+                var shipName = location.href.split("/").slice(-1)[0].replaceAll("-", " ").toUpperCase();
+                return el.name.toUpperCase() == shipName;
+            });
+
+            if (shipMint.length == 1) {
+                var ws;
+
+                nftMint = shipMint[0].mint;
+
+                getRoom({ "mint": nftMint })
+                    .then(data => {
+                        ws = new WebSocket("wss://starcomm.staratlas.com/B7XQd2JSx/" + data.room.roomId + "?sessionId=" + data.sessionId);
+                        ws.onmessage = async (event) => {
+                            var msgData = await new Response(event.data).text();
+
+                            if (!msgData.includes('schema')) {
+                                msgData = cleanString(msgData);
+
+                                var marker = document.getElementsByTagName('picture');
+                                for (var x = 0; x < marker.length; x++) {
+                                    var nextEl = marker[x].nextSibling;
+                                    if (nextEl.getAttribute('class').startsWith('GalacticMarketplacecommonstyles__GMTableCellText-') && nextEl.innerText.includes('...')) {
+                                        var vStart = msgData.search(nextEl.innerText.substring(0, 4));
+                                        var vEnd = msgData.search(nextEl.innerText.slice(-4));
+
+                                        if (vStart > 0 && vEnd > vStart) {
+                                            nextEl.innerText = msgData.substring(vStart, vEnd + 4);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        ws.onopen = (event) => {
+                            var arr = new Uint8Array([10]);
+                            ws.send(arr.buffer);
+                        };
+                    });
+            }
+        });
+
+
+}
+function cleanString(input) {
+    var output = "";
+    for (var i = 0; i < input.length; i++) {
+        if (input.charCodeAt(i) <= 127) {
+            output += input.charAt(i);
+        }
+    }
+    return output;
+}
+async function getRoom(data) {
+    const response = await fetch("https://starcomm.staratlas.com/matchmake/joinOrCreate/Galactic_Marketplace_Room", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    });
+
+    return response.json();
+}
+async function getNftApi() {
+    const response = await fetch("https://galaxy.staratlas.com/nfts", {
+        method: 'GET'
+    });
+
+    return response.json();
 }
