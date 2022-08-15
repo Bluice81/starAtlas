@@ -1,0 +1,25 @@
+{
+    "manifest_version": 2,
+    "name": "StarAtlas Tools",
+    "version": "6.2",
+    "description": "An unofficial extension of the \"Star Atlas\" game that enhances the gaming experience",
+    "icons": {
+      "48": "icons/logo.jpg"
+    },
+    "permissions": [
+      "https://lnk.totemzetasoft.it/starAtlas/api/services.php",
+      "https://galaxy.staratlas.com/nfts",
+      "https://starcomm.staratlas.com/*"
+    ],
+    "content_scripts": [
+      {
+        "matches": [
+          "https://play.staratlas.com/*"
+        ],
+        "js": [
+          "js/starEffect.js",
+          "js/engine.js"
+        ]
+      }
+    ]
+  }
