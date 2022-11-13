@@ -891,16 +891,16 @@ function getQtaForDay(numDay) {
 
         if (shipInfo.length == 1) {
             switch (location.href.split("/").slice(-1)[0]) {
-                case "food":
+                case "foodQJAztMzX1DKpLaiounNe2BDMds5RNuPC6jsNrDG":
                     dayQta += fleetInStaking[x].nr * shipInfo[0].fdT;
                     break;
-                case "fuel":
+                case "fueL3hBZjLLLJHiFH9cqZoozTG3XQZ53diwFPwbzNim":
                     dayQta += fleetInStaking[x].nr * shipInfo[0].fudT;
                     break;
-                case "ammunition":
+                case "ammoK8AkX2wnebQb35cDAZtTkvsXQbi82cGeTnUvvfK":
                     dayQta += fleetInStaking[x].nr * shipInfo[0].adT;
                     break;
-                case "toolkit":
+                case "tooLsNYLiVqzg8o4m3L2Uetbn62mvMWRqkog6PQeYKL":
                     dayQta += fleetInStaking[x].nr * shipInfo[0].rdT;
                     break;
             }
