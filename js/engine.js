@@ -6,8 +6,8 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '6.2 15/08/2022';
-let oldMarketName = '';
+let versione = '6.5 13/11/2022';
+
 
 let extSetting = {
     ext001: "YES",
@@ -240,10 +240,10 @@ function checkMenu() {
         }
     }
 
-    if (location.href.endsWith('market/ammunition') ||
-        location.href.includes('market/fuel') ||
-        location.href.includes('market/toolkit') ||
-        location.href.includes('market/food')) {
+    if (location.href.endsWith('market/ammoK8AkX2wnebQb35cDAZtTkvsXQbi82cGeTnUvvfK') ||
+        location.href.includes('market/fueL3hBZjLLLJHiFH9cqZoozTG3XQZ53diwFPwbzNim') ||
+        location.href.includes('market/tooLsNYLiVqzg8o4m3L2Uetbn62mvMWRqkog6PQeYKL') ||
+        location.href.includes('market/foodQJAztMzX1DKpLaiounNe2BDMds5RNuPC6jsNrDG')) {
         var container = document.querySelector(`table[class^="styles__StyledTable-"]`);
         if (container) {
             var tr = container.getElementsByTagName('tr');
@@ -262,15 +262,6 @@ function checkMenu() {
 
         if (!document.getElementById('x001')) {
             getMarketDataApi(0, processShip);
-        }
-    }
-
-    if (location.href.includes('/market/') && document.querySelector(`section[class^="ItemOrdersTablestyles__ItemOrdersTableScrollableWrapper-"]`)) {
-        var marketName = location.href.split("/").slice(-1)[0];
-        if (oldMarketName !== marketName) {
-            oldMarketName = marketName;
-
-            showWalletAddress();
         }
     }
 
@@ -345,7 +336,7 @@ function checkMenu() {
     }
 
     if (location.href.includes('/inventory') &&
-        document.getElementsByClassName('tabSelected ')[0].innerText.toLowerCase() == 'resources') {
+        document.getElementsByClassName('tabSelected ')[0].innerText.toLowerCase() == 'resource') {
 
         if (extSetting.ext008 == 'YES') {
             if (!document.getElementById('resourceTimer')) {
@@ -834,7 +825,7 @@ function initBuyResources() {
             template.substring(5, template.length);
         template = template.replace('Quantity to BUY', 'For x day');
         template = template.replace('margin-top: 6px;', 'visibility: hidden');
-        template = template.replace('min="1"', 'min="1" readonly="true" ids="buyDayTxt"');
+        template = template.replace('min="0"', 'min="1" readonly="true" ids="buyDayTxt"');
         template = template.replace('1964579179232', '365');
         template = template.replace('General/Step Up', 'buyDayUp');
         template = template.replace('General/Step Down', 'buyDayDown');
@@ -919,7 +910,7 @@ function getQtaForDay(numDay) {
     var request = dayQta * parseInt(numDay) - ownedQta;
 
     //retrieve field quantity and set value
-    var el = document.querySelectorAll(`input[min="1"]`)[1];
+    var el = document.querySelectorAll(`input[min="0"]`)[0];
     var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
     nativeInputValueSetter.call(el, (request < 0 ? 0 : request).toFixed(0));
 
@@ -945,64 +936,6 @@ function gifShip(shipData) {
             }
         }
     }
-}
-function showWalletAddress() {
-    myLog('Load wallet address');
-
-    fetch("https://galaxy.staratlas.com/nfts",
-        {
-            method: 'GET'
-        })
-        .then(async response => {
-            const isJson = response.headers.get('content-type')?.includes('application/json');
-            const data = isJson ? await response.json() : null;
-
-            if (response.ok) {
-                var shipMint = data.filter(function (el) {
-                    var shipName = location.href.split("/").slice(-1)[0].replaceAll("-", " ").toUpperCase();
-                    return el.name.toUpperCase() == shipName;
-                });
-
-                if (shipMint.length == 1) {
-                    var ws;
-
-                    nftMint = shipMint[0].mint;
-
-                    getRoom({ "mint": nftMint })
-                        .then(data => {
-                            ws = new WebSocket("wss://starcomm.staratlas.com/B7XQd2JSx/" + data.room.roomId + "?sessionId=" + data.sessionId);
-                            ws.onmessage = async (event) => {
-                                var msgData = await new Response(event.data).text();
-
-                                if (!msgData.includes('schema')) {
-                                    msgData = cleanString(msgData);
-
-                                    var marker = document.getElementsByTagName('picture');
-                                    for (var x = 0; x < marker.length; x++) {
-                                        var nextEl = marker[x].nextSibling;
-                                        if (nextEl.getAttribute('class').startsWith('GalacticMarketplacecommonstyles__GMTableCellText-') && nextEl.innerText.includes('...')) {
-                                            var vStart = msgData.search(nextEl.innerText.substring(0, 4));
-                                            var vEnd = msgData.search(nextEl.innerText.slice(-4));
-
-                                            if (vStart > 0 && vEnd > vStart) {
-                                                nextEl.innerText = msgData.substring(vStart, vEnd + 4);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            ws.onopen = (event) => {
-                                var arr = new Uint8Array([10]);
-                                ws.send(arr.buffer);
-                            };
-                        });
-                }
-            }
-        })
-        .catch(error => {
-            myLog(error);
-        });
 }
 function cleanString(input) {
     var output = "";
