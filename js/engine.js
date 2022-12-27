@@ -6,7 +6,7 @@ let oldUpdateCoinPrice;
 let cvf = 0.0; //current value market usdc lower ask
 let tpr = 0.0; //total pending rewards
 let cacheShipData;
-let versione = '6.5 13/11/2022';
+let versione = '6.7 27/12/2022';
 
 
 let extSetting = {
@@ -28,27 +28,6 @@ function myLog(text) {
 }
 
 myLog('load extension');
-
-document.onkeydown = function (event) {
-    if (event.altKey && event.code == "KeyP") {
-        var el = document.getElementById('divPrice');
-        if (el.style.display == 'none') {
-            el.style.display = 'block';
-        } else {
-            el.style.display = 'none';
-        }
-    }
-    if (event.altKey && event.code == "KeyG") {
-        window.open("https://lnk.totemzetasoft.it/starAtlas/roi.html");
-    }
-};
-
-window.addEventListener('message', function (event) {
-    if (event.data.func == 'closeRoiWindow') {
-        document.getElementById('divChart').style.display = 'none';
-        document.activeElement.blur();
-    }
-}, false);
 
 //load extSetting from localstorage if exists
 if (localStorage.extSetting) {
@@ -78,8 +57,6 @@ var formatterNr = new Intl.NumberFormat('en-US', {
 setInterval(checkMenu, 500);
 
 function checkMenu() {
-    initPriceCoin();
-
     //create extension menu if not exists
     if (!document.getElementById('mnuAtlasTool')) {
         myLog('create extension menu');
@@ -125,13 +102,7 @@ function checkMenu() {
                     <div style='font-size: 10px; position:absolute; bottom: 10px; left: 10px; color: white; font-family: industryMedium; '>
                         <a style='text-decoration: underline;' target="_blank" href='https://lnk.totemzetasoft.it/starAtlas/guida.html?v=4_8'>${versione}</a>
                     </div>     
-                    <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>
-                        <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
-                            ALT + p --> show/hide coin prices window                
-                        </div>   
-                        <div style='border-bottom: solid 1px wheat; color: white; display: flex; justify-content: center; align-items: center; display:flex; height: 45px; font-family: industryMedium; '>
-                            ALT + g --> show/hide Roi Tool              
-                        </div>                            
+                    <div style='margin-top: 10px; height: 400px; overflow-yoverflow-y: ;overflow-y: scroll;'>                        
                         <div style='display:flex; height: 45px; font-family: industryMedium; '>
                             <div style='display: flex; justify-content:center; align-items: center; width: 300px; color: white; flex: 0 1 auto'>
                                 Show origination price
@@ -244,7 +215,7 @@ function checkMenu() {
         location.href.includes('market/fueL3hBZjLLLJHiFH9cqZoozTG3XQZ53diwFPwbzNim') ||
         location.href.includes('market/tooLsNYLiVqzg8o4m3L2Uetbn62mvMWRqkog6PQeYKL') ||
         location.href.includes('market/foodQJAztMzX1DKpLaiounNe2BDMds5RNuPC6jsNrDG')) {
-        var container = document.querySelector(`table[class^="styles__StyledTable-"]`);
+        var container = document.querySelector(`table[class^="ItemOrdersTablestyles"]`);
         if (container) {
             var tr = container.getElementsByTagName('tr');
             for (var x = 0; x < tr.length; x++) {
@@ -642,117 +613,6 @@ function optionExt_click(sender) {
 
     localStorage.extSetting = JSON.stringify(extSetting);
 }
-function initPriceCoin() {
-    if (!document.getElementById('divPrice')) {
-        var template = `
-            <div id='divPrice' style='display:none; user-select: none;padding: 10px; box-shadow:0px 0px 40px 5px #000; border-radius: 10px; z-index: 1000; width: 320px; height: 150px; background: white; position: absolute; top: 300px; left: 400px'>
-                <div style='display: flex; padding-top: 10px'>
-                    <div style='text-transform: uppercase; font-size:24px; font-family: tungstenBook; flex: 0 1 auto; height: 30px; width: 100px; display: flex; justify-content: center'>
-                        atlas
-                    </div>
-                    <div id='priceAtlas' style='flex: 1 1 auto; height: 30px; margin-right: 10px'>
-                    </div>
-                </div>	
-                <div style='display: flex; padding-top: 10px'>
-                    <div style='text-transform: uppercase; font-size:24px; font-family: tungstenBook; flex: 0 1 auto; height: 30px; width: 100px; display: flex; justify-content: center'>
-                        polis
-                    </div>
-                    <div id='pricePolis' style='flex: 1 1 auto; height: 30px; margin-right: 10px'>
-                    </div>
-                </div>	
-                <div style='display: flex; padding-top: 10px'>
-                    <div style='text-transform: uppercase; font-size:24px; font-family: tungstenBook; flex: 0 1 auto; height: 30px; width: 100px; display: flex; justify-content: center'>
-                        solana
-                    </div>
-                    <div id='priceSolana' style='flex: 1 1 auto; height: 30px; margin-right: 10px'>
-                    </div>
-                </div>			
-            </div>
-        `;
-
-        document.body.appendChild(createElementFromHTML(template, 'divPrice'), null);
-
-
-        function makeDragable(dragHandle, dragTarget) {
-            let dragObj = null; //object to be moved
-            let xOffset = 0; //used to prevent dragged object jumping to mouse location
-            let yOffset = 0;
-
-            document.querySelector(dragHandle).addEventListener("mousedown", startDrag, true);
-            document.querySelector(dragHandle).addEventListener("touchstart", startDrag, true);
-
-            /*sets offset parameters and starts listening for mouse-move*/
-            function startDrag(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                dragObj = document.querySelector(dragTarget);
-                dragObj.style.position = "absolute";
-                let rect = dragObj.getBoundingClientRect();
-
-                if (e.type == "mousedown") {
-                    xOffset = e.clientX - rect.left; //clientX and getBoundingClientRect() both use viewable area adjusted when scrolling aka 'viewport'
-                    yOffset = e.clientY - rect.top;
-                    window.addEventListener('mousemove', dragObject, true);
-                } else if (e.type == "touchstart") {
-                    xOffset = e.targetTouches[0].clientX - rect.left;
-                    yOffset = e.targetTouches[0].clientY - rect.top;
-                    window.addEventListener('touchmove', dragObject, true);
-                }
-            }
-
-            /*Drag object*/
-            function dragObject(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (dragObj == null) {
-                    return; // if there is no object being dragged then do nothing
-                } else if (e.type == "mousemove") {
-                    dragObj.style.left = e.clientX - xOffset + "px"; // adjust location of dragged object so doesn't jump to mouse position
-                    dragObj.style.top = e.clientY - yOffset + "px";
-                } else if (e.type == "touchmove") {
-                    dragObj.style.left = e.targetTouches[0].clientX - xOffset + "px"; // adjust location of dragged object so doesn't jump to mouse position
-                    dragObj.style.top = e.targetTouches[0].clientY - yOffset + "px";
-                }
-            }
-
-            /*End dragging*/
-            document.onmouseup = function (e) {
-                if (dragObj) {
-                    dragObj = null;
-                    window.removeEventListener('mousemove', dragObject, true);
-                    window.removeEventListener('touchmove', dragObject, true);
-                }
-            }
-        }
-
-        makeDragable('#divPrice', '#divPrice');
-    }
-
-    if (document.getElementById('divPrice').style.display == 'block') {
-        //update price
-        if (!oldUpdateCoinPrice || ((new Date() - oldUpdateCoinPrice) / 1000 > 20)) {
-            myLog('update coin price');
-
-            var el = document.getElementById('priceAtlas');
-            el.style.background = `url("https://lnk.totemzetasoft.it/starAtlas/api/price/star-atlas.png?t=${getTicks()}")`;
-            el.style.backgroundRepeat = 'no-repeat';
-            el.style.backgroundSize = 'cover';
-
-            el = document.getElementById('pricePolis');
-            el.style.background = `url("https://lnk.totemzetasoft.it/starAtlas/api/price/star-atlas-polis.png?t=${getTicks()}")`;
-            el.style.backgroundRepeat = 'no-repeat';
-            el.style.backgroundSize = 'cover';
-
-            el = document.getElementById('priceSolana');
-            el.style.background = `url("https://lnk.totemzetasoft.it/starAtlas/api/price/solana.png?t=${getTicks()}")`;
-            el.style.backgroundRepeat = 'no-repeat';
-            el.style.backgroundSize = 'cover';
-
-            oldUpdateCoinPrice = new Date();
-        }
-    }
-}
 function getTicks() {
     var now = new Date();
     return now.getTime();
@@ -890,7 +750,7 @@ function getQtaForDay(numDay) {
         });
 
         if (shipInfo.length == 1) {
-            switch (location.href.split("/").slice(-1)[0]) {
+            switch (location.href.split("/").slice(-2)[0]) {
                 case "foodQJAztMzX1DKpLaiounNe2BDMds5RNuPC6jsNrDG":
                     dayQta += fleetInStaking[x].nr * shipInfo[0].fdT;
                     break;
